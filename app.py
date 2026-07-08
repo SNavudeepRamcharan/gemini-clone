@@ -36,9 +36,9 @@ def get_specific_history():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     # Since files are uploaded, data comes through form/files multipart, not request.json
-    user_message = request.form.get("message")
+    user_message = request.form.get("message", "")
     session_id = request.form.get("session_id", "default")
-    uploaded_file = request.files.get("file")  # Expects file input with name="file"
+    uploaded_file = request.files.get("file")
     
     api_key = os.environ.get("GEMINI_API_KEY")
     
@@ -82,7 +82,7 @@ def chat():
         # Save user text message to memory tracking database
         chat_database[session_id]["messages"].append({"role": "user", "text": user_message})
 
-    # Build entire conversation conversation contents list for contextual memory
+    # Build entire conversation contents list for contextual memory
     contents = []
     for msg in chat_database[session_id]["messages"][:-1]:  # historical records
         contents.append({

@@ -3,198 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Next AI Workspace</title>
+    <title>Next AI Dashboard</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; overflow: hidden; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #131314;
+            color: #e3e3e3;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background-color: #1e1f20;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-right: 1px solid #333;
+        }
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+        .message-row {
+            margin: 15px 0;
+        }
+        .sender-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .sender-next { color: #8ab4f8; }
+        .sender-you { color: #e3e3e3; text-align: right; }
+        .message-text {
+            background-color: #282a2d;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 75%;
+            display: inline-block;
+            word-wrap: break-word;
+        }
+        .user-row { text-align: right; }
+        .user-row .message-text { background-color: #333537; }
         
-        .sidebar { width: 280px; background-color: #1e1f20; display: flex; flex-direction: column; padding: 16px; border-right: 1px solid #282a2c; }
-        .brand { font-size: 1.4rem; font-weight: 600; color: #fff; padding: 10px 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .brand-sparkle { color: #7aa5f8; font-size: 1.5rem; }
-        
-        .side-btn { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 24px; font-size: 0.95rem; color: #e3e3e3; cursor: pointer; transition: background 0.2s; background: transparent; border: none; text-align: left; width: 100%; }
-        .side-btn:hover { background-color: #2d2f31; }
-        .new-chat-btn { background-color: #282a2c; margin-bottom: 16px; font-weight: 500; }
-        .new-chat-btn:hover { background-color: #333537; }
-        
-        .section-title { font-size: 0.85rem; font-weight: 600; color: #9aa0a6; padding: 16px 12px 6px 12px; margin-top: 14px; }
-        
-        .recents-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
-        .recent-item { padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; color: #e3e3e3; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .recent-item:hover { background-color: #2d2f31; }
-        .recent-item.active { background-color: #004a77; color: #c2e7ff; font-weight: 500; }
-
-        .main-chat { flex: 1; display: flex; flex-direction: column; background-color: #131314; height: 100vh; }
-        .chat-messages { flex: 1; padding: 40px 18% 20px 18%; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
-        
-        .message-wrapper { display: flex; flex-direction: column; }
-        .sender-label { font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; }
-        .user-wrapper .sender-label { color: #8ab4f8; align-self: flex-end; }
-        .ai-wrapper .sender-label { color: #c4eed0; align-self: flex-start; }
-        
-        .message { max-width: 85%; padding: 12px 18px; border-radius: 16px; line-height: 1.6; font-size: 1rem; word-break: break-word; }
-        .user-message { background: #282a2c; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .ai-message { background: transparent; color: #e3e3e3; align-self: flex-start; padding-left: 0; }
-        
-        .chat-input-container { padding: 10px 18% 35px 18%; background: #131314; }
-        .chat-input-area { background: #1e1f20; border-radius: 30px; display: flex; align-items: center; padding: 8px 20px; }
-        
-        input[type="text"] { flex: 1; padding: 10px; background: transparent; border: none; color: #fff; font-size: 1rem; outline: none; }
-        input[type="text"]::placeholder { color: #80868b; }
-        
-        button { background: #8ab4f8; color: #042100; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #aecbfa; }
+        /* Bottom Input Form Styling */
+        .input-bar-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            background-color: #282a2d;
+            border-radius: 28px;
+            padding: 8px 16px;
+            gap: 12px;
+        }
+        .upload-label {
+            font-size: 22px;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.2s;
+        }
+        .upload-label:hover { color: #8ab4f8; }
+        #user-prompt {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #e3e3e3;
+            font-size: 16px;
+            outline: none;
+        }
+        #send-btn {
+            background-color: #8ab4f8;
+            color: #131314;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #send-btn:hover { background-color: #aecbfa; }
+        #file-preview-name {
+            color: #8ab4f8;
+            font-size: 13px;
+            margin-top: 6px;
+            padding-left: 40px;
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand"><span class="brand-sparkle">✦</span> Next AI</div>
-        
-        <button class="side-btn new-chat-btn" onclick="startNewChat()">📝 New chat</button>
-        <button class="side-btn" onclick="switchFeature('Search Engine', 'Looking for something? Ask me to look up information across your previous chats.', 'Search your chats...')">🔍 Search chats</button>
-        <button class="side-btn" onclick="switchFeature('Image Studio', 'Welcome to the Image Studio. Tell me what visual concepts you want to discuss.', 'Describe an image scene...')">🖼️ Images</button>
-        <button class="side-btn" onclick="switchFeature('Video Center', 'Welcome to the Video Center. Let\'s script or plan out video modules.', 'Enter video topic...')">🎥 Videos</button>
-        <button class="side-btn" onclick="switchFeature('Knowledge Library', 'Welcome to your library assistant. Ask me to find documentation insights.', 'Search resources...')">🗂️ Library</button>
-        
-        <div class="section-title">Recents</div>
-        <div class="recents-list" id="recents-box"></div>
+        <h2>✨ Next AI</h2>
+        <button style="padding: 10px; border-radius: 8px; border: none; background: #333; color: #fff; cursor: pointer;">+ New Chat</button>
+        <div style="margin-top: 20px; font-size: 14px; color: #aaa;">Recents</div>
+        <div id="history-list"></div>
     </div>
 
     <div class="main-chat">
-        <div class="chat-messages" id="chat-box">
-            <div class="message-wrapper ai-wrapper">
-                <div class="sender-label">Next AI</div>
-                <div class="message ai-message">Hello! I am Next AI. Enter a prompt below to start a new history record thread.</div>
+        <div class="chat-box" id="chat-stream">
+            <div class="message-row">
+                <div class="sender-name sender-next">Next AI</div>
+                <div class="message-text">Hello! I am Next AI. Upload research files or images, or type a prompt below to get started.</div>
             </div>
         </div>
-        
-        <div class="chat-input-container">
-            <div class="chat-input-area">
-                <input type="text" id="user-input" placeholder="Enter a prompt here..." autocomplete="off">
-                <button onclick="sendMessage()">Send</button>
+
+        <div class="input-bar-container">
+            <div class="input-container">
+                <label for="file-upload" class="upload-label" title="Upload image or document">📎</label>
+                <input type="file" id="file-upload" name="file" accept="image/*, .pdf, .txt, .csv, .docx" style="display: none;" onchange="showSelectedFile()">
+                
+                <input type="text" id="user-prompt" placeholder="Enter a prompt here..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                
+                <button id="send-btn" onclick="sendMessage()">Send</button>
             </div>
+            <div id="file-preview-name"></div>
         </div>
     </div>
 
-<script>
-    let sessionId = "session_" + Math.random().toString(36).substring(2, 9);
-    const chatBox = document.getElementById('chat-box');
-    const userInput = document.getElementById('user-input');
-    const recentsBox = document.getElementById('recents-box');
+    <script>
+        // Track unique device context instances matching your backend structure rules
+        const session_id = "session_" + Math.random().toString(36).substring(2, 9);
 
-    userInput.addEventListener("keyup", function(event) {
-        if (event.key === "Enter") { sendMessage(); }
-    });
-
-    // Device-specific localStorage integration layer
-    let mySessions = JSON.parse(localStorage.getItem('next_ai_sessions') || '[]');
-
-    loadSidebarHistory();
-
-    function trackSessionLocally(id) {
-        if (!mySessions.includes(id)) {
-            mySessions.push(id);
-            localStorage.setItem('next_ai_sessions', JSON.stringify(mySessions));
-        }
-    }
-
-    function startNewChat() {
-        sessionId = "session_" + Math.random().toString(36).substring(2, 9);
-        userInput.placeholder = "Enter a prompt here...";
-        chatBox.innerHTML = `
-            <div class="message-wrapper ai-wrapper">
-                <div class="sender-label">Next AI</div>
-                <div class="message ai-message">Started a fresh conversation workspace. Your next message will create a history log.</div>
-            </div>`;
-        loadSidebarHistory();
-    }
-
-    function switchFeature(featureName, greetingText, placeholderText) {
-        sessionId = "feature_" + featureName.toLowerCase().replace(" ", "_") + "_" + Math.random().toString(36).substring(2, 6);
-        userInput.placeholder = placeholderText;
-        chatBox.innerHTML = `
-            <div class="message-wrapper ai-wrapper">
-                <div class="sender-label">Next AI [${featureName}]</div>
-                <div class="message ai-message">${greetingText}</div>
-            </div>`;
-        loadSidebarHistory();
-    }
-
-    async function loadSidebarHistory() {
-        try {
-            // Send only this browser's tracked session array list to the server lookup endpoint
-            const res = await fetch('/api/history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_ids: mySessions })
-            });
-            const historyList = await res.json();
-            recentsBox.innerHTML = '';
-            
-            historyList.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'recent-item';
-                if (item.session_id === sessionId) div.className += ' active';
-                div.innerText = item.title;
-                recentsBox.appendChild(div);
-            });
-        } catch (e) {
-            console.error("Failed to fetch sidebar history logs safely.");
-        }
-    }
-
-    async function sendMessage() {
-        const messageText = userInput.value.trim();
-        if (!messageText) return;
-
-        appendMessage(messageText, 'user', 'user-message');
-        userInput.value = '';
-
-        const loadingWrapper = appendMessage('Thinking...', 'ai', 'ai-message');
-        const textNode = loadingWrapper.querySelector('.message');
-
-        // Log this session id to localStorage before sending the message packet
-        trackSessionLocally(sessionId);
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: messageText, session_id: sessionId })
-            });
-            const data = await response.json();
-            
-            if (data.response) {
-                textNode.innerText = data.response;
-                loadSidebarHistory();
+        function showSelectedFile() {
+            const fileInput = document.getElementById('file-upload');
+            const previewName = document.getElementById('file-preview-name');
+            if (fileInput.files.length > 0) {
+                previewName.innerText = "📄 Attached File: " + fileInput.files[0].name;
             } else {
-                textNode.innerText = "Error: " + data.error;
+                previewName.innerText = "";
             }
-        } catch (error) {
-            textNode.innerText = "Connection lost with backend server.";
         }
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
 
-    function appendMessage(text, sender, bubbleClass) {
-        const wrapper = document.createElement('div');
-        wrapper.className = `message-wrapper ${sender}-wrapper`;
-        
-        const label = document.createElement('div');
-        label.className = 'sender-label';
-        label.innerText = sender === 'user' ? 'You' : 'Next AI';
-        
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${bubbleClass}`;
-        msgDiv.innerText = text;
-        
-        wrapper.appendChild(label);
-        wrapper.appendChild(msgDiv);
-        chatBox.appendChild(wrapper);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        return wrapper;
-    }
-</script>
+        function sendMessage() {
+            const textInput = document.getElementById('user-prompt');
+            const fileInput = document.getElementById('file-upload');
+            const chatStream = document.getElementById('chat-stream');
+            
+            const message = textInput.value.trim();
+            const hasFile = fileInput.files.length > 0;
+            
+            if (!message && !hasFile) return;
+
+            // Render user bubble immediately on UI stream
+            let userDisplay = message;
+            if (hasFile) {
+                userDisplay = (message ? message + "<br>" : "") + `<small style="color:#8ab4f8;">📎 [File: ${fileInput.files[0].name}]</small>`;
+            }
+            
+            chatStream.innerHTML += `
+                <div class="message-row" style="text-align: right;">
+                    <div class="sender-name sender-you">You</div>
+                    <div class="message-text">${userDisplay}</div>
+                </div>
+            `;
+            chatStream.scrollTop = chatStream.scrollHeight;
+
+            // Package the stream structures into a FormData container object
+            const formData = new FormData();
+            formData.append("message", message);
+            formData.append("session_id", session_id);
+            if (hasFile) {
+                formData.append("file", fileInput.files[0]);
+            }
+
+            // Clear layout input nodes immediately to prepare for subsequent streams
+            textInput.value = "";
+            fileInput.value = "";
+            document.getElementById('file-preview-name').innerText = "";
+
+            // POST transmission payload configurations
+            fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.response) {
+                    chatStream.innerHTML += `
+                        <div class="message-row">
+                            <div class="sender-name sender-next">Next AI</div>
+                            <div class="message-text">${data.response.replace(/\n/g, '<br>')}</div>
+                        </div>
+                    `;
+                } else {
+                    chatStream.innerHTML += `
+                        <div class="message-row">
+                            <div class="sender-name" style="color: red;">Error</div>
+                            <div class="message-text">${data.error || 'Something went wrong.'}</div>
+                        </div>
+                    `;
+                }
+                chatStream.scrollTop = chatStream.scrollHeight;
+            })
+            .catch(err => {
+                console.error("Transmission breakdown:", err);
+            });
+        }
+    </script>
 </body>
 </html>
