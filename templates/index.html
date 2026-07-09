@@ -14,31 +14,29 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-            position: relative;
         }
         
-        /* Sliding Sidebar Menu Dashboard matches screenshot specs exactly */
+        /* Sidebar layout matching your minimal design profile */
         .sidebar {
             width: 260px;
             background-color: #1e1f20;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            z-index: 100;
-            transition: transform 0.3s ease;
-            transform: translateX(0);
+            border-right: 1px solid #2d2f31;
             box-sizing: border-box;
+            flex-shrink: 0;
+            transition: width 0.3s ease, padding 0.3s ease, border 0.3s ease;
+            overflow: hidden;
         }
         
         .sidebar.hidden {
-            transform: translateX(-100%);
+            width: 0;
+            padding: 20px 0;
+            border-right: none;
         }
 
-        /* Branding typography matching your layout screenshot */
+        /* Branding header typography styles */
         .brand {
             font-size: 24px;
             font-weight: bold;
@@ -48,10 +46,11 @@
             margin-top: 10px;
             margin-bottom: 25px;
             color: #fff;
+            white-space: nowrap;
         }
         .brand-sparkle { color: #7baaf7; }
         
-        /* Centered button format matching screen snippet */
+        /* Centered button formatting specifications */
         .new-chat-btn {
             background-color: #2d2f31;
             border: none;
@@ -64,15 +63,17 @@
             text-align: center;
             width: 100%;
             box-sizing: border-box;
+            white-space: nowrap;
         }
         .new-chat-btn:hover { background-color: #3c4043; }
         
-        /* Section Recents header style */
+        /* Recents subtitle section typography layout */
         .section-title {
             font-size: 16px;
             color: #e3e3e3;
             margin-top: 5px;
             margin-bottom: 15px;
+            white-space: nowrap;
         }
         
         .history-container {
@@ -95,7 +96,7 @@
         }
         .history-item:hover { color: #fff; }
 
-        /* Main Workspace Panel */
+        /* Main Context Chat Workspace Pane */
         .main-chat {
             flex: 1;
             display: flex;
@@ -105,14 +106,10 @@
             background-color: #131314;
             height: 100vh;
             box-sizing: border-box;
-            margin-left: 260px; 
-            transition: margin-left 0.3s ease;
+            position: relative;
         }
         
-        .main-chat.full-width {
-            margin-left: 0;
-        }
-        
+        /* Fixed Toggle Handle button positioning alignment rules */
         .menu-toggle {
             background: none;
             border: none;
@@ -125,6 +122,9 @@
             z-index: 10;
             padding: 5px 10px;
             border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .menu-toggle:hover { background-color: #2d2f31; }
 
@@ -165,7 +165,7 @@
         .message-row:hover .edit-msg-btn { opacity: 1; }
         .user-row { text-align: right; }
 
-        /* Input Bar Layout */
+        /* Foot Bar Core Entry container layouts */
         .input-bar-container {
             width: 100%;
             max-width: 800px;
@@ -224,6 +224,7 @@
 </head>
 <body>
 
+    <!-- Sidebar Menu view box configuration -->
     <div class="sidebar" id="sidebar-menu">
         <div class="brand"><span class="brand-sparkle">✦</span> Next AI</div>
         <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
@@ -231,7 +232,9 @@
         <div class="history-container" id="history-list"></div>
     </div>
 
+    <!-- Main Workspace Application Window viewpane -->
     <div class="main-chat" id="main-chat-window">
+        <!-- Structural Navigation burger options toggle handle link anchor -->
         <button class="menu-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
 
         <div class="chat-box" id="chat-stream">
@@ -265,16 +268,187 @@
 
         updateSidebarHistory();
 
+        // FIXED: Core responsive view pane calculation layout mechanics
         function toggleSidebar() {
             document.getElementById('sidebar-menu').classList.toggle('hidden');
-            document.getElementById('main-chat-window').classList.toggle('full-width');
         }
 
         function formatAIResponse(text) {
             if (!text) return "";
+            let formatted = text.replace(/```(?:[a-zA-Z0-9_-]+)?([\s\S]*?)```/g, function(match, codeBody) {
+                return '<pre style="background-color: #1e1f20; padding: 16px; border-radius: 12px; border: 1px solid #2d2f31; overflow-x: auto; font-family: \'Courier New\', Courier, monospace; font-size: 14px; text-align: left; color: #e3e3e3; margin: 15px 0; white-space: pre; max-width: 100%;">' + codeBody.trim() + '</pre>';
+            });
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/^\*\s(.*)$/gm, '• $1');
             
-            // Clean markdown code snippet wrapper blocks
-            let formatted = text.replace(/
-http://googleusercontent.com/immersive_entry_chip/0
+            let segments = formatted.split(/(<pre[\s\S]*?<\/pre>)/);
+            for (let i = 0; i < segments.length; i++) {
+                if (!segments[i].startsWith('<pre')) {
+                    segments[i] = segments[i].replace(/\n/g, '<br>');
+                }
+            }
+            return segments.join('');
+        }
 
-Go back to Render, tap **Manual Deploy** -> **Deploy latest commit**, and give it a moment to complete. Everything will work properly!
+        function showSelectedFile() {
+            const fileInput = document.getElementById('file-upload');
+            const previewName = document.getElementById('file-preview-name');
+            if (fileInput && fileInput.files.length > 0) {
+                previewName.innerText = "📄 Attached: " + fileInput.files[0].name;
+            } else if (previewName) {
+                previewName.innerText = "";
+            }
+        }
+
+        function editPrompt(buttonElement) {
+            const rawText = buttonElement.getAttribute('data-raw');
+            document.getElementById('user-prompt').value = rawText;
+            document.getElementById('user-prompt').focus();
+        }
+
+        function startNewChat() {
+            currentSessionId = "session_" + Math.random().toString(36).substring(2, 9);
+            activeSessionsList.push(currentSessionId);
+            localStorage.setItem('device_sessions', JSON.stringify(activeSessionsList));
+            
+            document.getElementById('chat-stream').innerHTML = `
+                <div class="message-row">
+                    <div class="sender-name sender-next">Next AI</div>
+                    <div class="message-text">Hello! I am Next AI. Enter a prompt below to start a new history record thread.</div>
+                </div>
+            `;
+            document.getElementById('user-prompt').value = "";
+            if(document.getElementById('file-upload')) document.getElementById('file-upload').value = "";
+            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
+            updateSidebarHistory();
+        }
+
+        function loadSession(sid) {
+            currentSessionId = sid;
+            const chatStream = document.getElementById('chat-stream');
+            chatStream.innerHTML = `
+                <div class="message-row">
+                    <div class="sender-name sender-next">Next AI</div>
+                    <div class="message-text" style="color: #aaa;">Syncing chat logs...</div>
+                </div>
+            `;
+            
+            const formData = new FormData();
+            formData.append("message", "Provide a quick history refresher summary for this thread.");
+            formData.append("session_id", sid);
+
+            fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                chatStream.innerHTML = "";
+                if (data.response) {
+                    chatStream.innerHTML += `
+                        <div class="message-row">
+                            <div class="sender-name sender-next">Next AI</div>
+                            <div class="message-text">${formatAIResponse(data.response)}</div>
+                        </div>
+                    `;
+                } else {
+                    chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Empty thread active. Type a message below!</div></div>`;
+                }
+                chatStream.scrollTop = chatStream.scrollHeight;
+            })
+            .catch(() => {
+                chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Thread loaded. Continue typing below.</div></div>`;
+            });
+        }
+
+        function updateSidebarHistory() {
+            fetch('/api/history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "session_ids": activeSessionsList })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const historyList = document.getElementById('history-list');
+                if (!historyList) return;
+                historyList.innerHTML = "";
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        historyList.innerHTML += `
+                            <div class="history-item" onclick="loadSession('${item.session_id}')" style="cursor: pointer;" title="${item.title}">
+                                💬 ${item.title}
+                            </div>
+                        `;
+                    });
+                }
+            }).catch(err => console.log("History synchronized.", err));
+        }
+
+        function sendMessage() {
+            const textInput = document.getElementById('user-prompt');
+            const fileInput = document.getElementById('file-upload');
+            const chatStream = document.getElementById('chat-stream');
+            
+            const message = textInput.value.trim();
+            const hasFile = fileInput && fileInput.files.length > 0;
+            
+            if (!message && !hasFile) return;
+
+            let userDisplay = message;
+            if (hasFile) {
+                userDisplay = (message ? message + "<br>" : "") + `<small style="color:#8ab4f8; font-weight:bold;">📎 Attached: ${fileInput.files[0].name}</small>`;
+            }
+            
+            let safeString = message.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+            chatStream.innerHTML += `
+                <div class="message-row user-row">
+                    <div class="sender-name sender-you">
+                        <button class="edit-msg-btn" data-raw="${safeString}" onclick="editPrompt(this)">✏️ Edit</button> 
+                        You
+                    </div>
+                    <div class="message-text">${userDisplay}</div>
+                </div>
+            `;
+            chatStream.scrollTop = chatStream.scrollHeight;
+
+            const formData = new FormData();
+            formData.append("message", message);
+            formData.append("session_id", currentSessionId);
+            if (hasFile) {
+                formData.append("file", fileInput.files[0]);
+            }
+
+            textInput.value = "";
+            if(fileInput) fileInput.value = "";
+            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
+
+            fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.response) {
+                    chatStream.innerHTML += `
+                        <div class="message-row">
+                            <div class="sender-name sender-next">Next AI</div>
+                            <div class="message-text">${formatAIResponse(data.response)}</div>
+                        </div>
+                    `;
+                } else {
+                    chatStream.innerHTML += `
+                        <div class="message-row">
+                            <div class="sender-name" style="color: red;">Error</div>
+                            <div class="message-text">${data.error || 'Connection dropped.'}</div>
+                        </div>
+                    `;
+                }
+                chatStream.scrollTop = chatStream.scrollHeight;
+                updateSidebarHistory(); 
+            })
+            .catch(err => console.error(err));
+        }
+    </script>
+</body>
+</html>
