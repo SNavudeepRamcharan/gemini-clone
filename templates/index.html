@@ -14,108 +14,88 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            position: relative;
         }
         
-        /* Sidebar styling with toggle transitions */
+        /* Sliding Sidebar Menu Dashboard matches screenshot specs exactly */
         .sidebar {
             width: 260px;
             background-color: #1e1f20;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            border-right: 1px solid #2d2f31;
-            transition: transform 0.3s ease, width 0.3s ease;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            z-index: 100;
+            transition: transform 0.3s ease;
             transform: translateX(0);
+            box-sizing: border-box;
         }
         
-        /* Class to hide sidebar */
         .sidebar.hidden {
             transform: translateX(-100%);
-            width: 0;
-            padding: 20px 0;
-            overflow: hidden;
-            border-right: none;
         }
 
+        /* Branding typography matching your layout screenshot */
         .brand {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            color: #fff;
         }
-        .brand-sparkle {
-            color: #7baaf7;
-        }
-        .nav-btn {
-            background: none;
-            border: none;
-            color: #e3e3e3;
-            padding: 12px;
-            text-align: left;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: background 0.2s;
-        }
-        .nav-btn:hover {
-            background-color: #2d2f31;
-        }
+        .brand-sparkle { color: #7baaf7; }
+        
+        /* Centered button format matching screen snippet */
         .new-chat-btn {
             background-color: #2d2f31;
             border: none;
             color: #e3e3e3;
             padding: 12px;
-            border-radius: 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             font-size: 14px;
-            margin-bottom: 15px;
-            justify-content: center;
+            margin-bottom: 25px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .new-chat-btn:hover {
-            background-color: #3c4043;
-        }
+        .new-chat-btn:hover { background-color: #3c4043; }
+        
+        /* Section Recents header style */
         .section-title {
-            font-size: 12px;
-            color: #aaa;
-            margin-top: 15px;
-            padding-left: 12px;
+            font-size: 16px;
+            color: #e3e3e3;
+            margin-top: 5px;
+            margin-bottom: 15px;
         }
+        
         .history-container {
             flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
-        /* Hide scrollbar line inside sidebar history list container */
-        .history-container::-webkit-scrollbar {
-            display: none;
-        }
+        .history-container::-webkit-scrollbar { display: none; }
+        
         .history-item {
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 4px 0;
+            font-size: 15px;
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             color: #ccced1;
         }
-        .history-item:hover {
-            background-color: #2d2f31;
-        }
+        .history-item:hover { color: #fff; }
 
-        /* Main Window Layout */
+        /* Main Workspace Panel */
         .main-chat {
             flex: 1;
             display: flex;
@@ -123,10 +103,16 @@
             justify-content: space-between;
             padding: 20px;
             background-color: #131314;
-            position: relative;
+            height: 100vh;
+            box-sizing: border-box;
+            margin-left: 260px; 
+            transition: margin-left 0.3s ease;
         }
         
-        /* Menu Toggle Button Style */
+        .main-chat.full-width {
+            margin-left: 0;
+        }
+        
         .menu-toggle {
             background: none;
             border: none;
@@ -137,49 +123,49 @@
             top: 20px;
             left: 20px;
             z-index: 10;
-            padding: 5px;
+            padding: 5px 10px;
             border-radius: 5px;
         }
-        .menu-toggle:hover {
-            background-color: #2d2f31;
-        }
+        .menu-toggle:hover { background-color: #2d2f31; }
 
         .chat-box {
             flex: 1;
             overflow-y: auto;
             max-width: 850px;
             width: 100%;
-            margin: 40px auto 20px auto; /* Added top margin to clear the toggle button */
-            padding-right: 15px;
-            scrollbar-width: none; /* Hides scrollbar on Firefox */
+            margin: 50px auto 20px auto; 
+            padding-right: 5px;
+            scrollbar-width: none; 
         }
-        
-        /* FIXED: Hides the scrolling scrollbar line on Chrome, Safari, and Opera */
-        .chat-box::-webkit-scrollbar {
-            display: none;
-        }
+        .chat-box::-webkit-scrollbar { display: none; }
 
-        .message-row {
-            margin: 20px 0;
-        }
-        .sender-name {
-            font-weight: bold;
-            margin-bottom: 6px;
-            font-size: 14px;
-        }
+        .message-row { margin: 25px 0; position: relative; }
+        .sender-name { font-weight: bold; margin-bottom: 6px; font-size: 14px; }
         .sender-next { color: #8ab4f8; }
-        .sender-you { color: #e3e3e3; text-align: right; }
+        .sender-you { color: #e3e3e3; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+        
         .message-text {
-            padding: 2px 0;
             font-size: 16px;
             line-height: 1.6;
-            max-width: 85%;
+            width: 100%;
             display: inline-block;
             word-wrap: break-word;
         }
+        
+        .edit-msg-btn {
+            background: none;
+            border: none;
+            color: #8ab4f8;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+            padding: 2px 6px;
+        }
+        .message-row:hover .edit-msg-btn { opacity: 1; }
         .user-row { text-align: right; }
 
-        /* Clean Input Container layout */
+        /* Input Bar Layout */
         .input-bar-container {
             width: 100%;
             max-width: 800px;
@@ -205,7 +191,6 @@
             padding: 10px 0;
         }
         
-        /* Paperclip icon moved safely to the LEFT side of prompt box */
         .upload-label {
             font-size: 22px;
             cursor: pointer;
@@ -213,9 +198,9 @@
             transition: color 0.2s;
             display: flex;
             align-items: center;
-            padding-right: 5px;
         }
         .upload-label:hover { color: #8ab4f8; }
+        
         #send-btn {
             background-color: #a8c7fa;
             color: #042100;
@@ -225,14 +210,14 @@
             font-weight: bold;
             cursor: pointer;
             font-size: 15px;
-            transition: background 0.2s;
         }
         #send-btn:hover { background-color: #c2e7ff; }
+        
         #file-preview-name {
             color: #8ab4f8;
             font-size: 13px;
             margin-top: 8px;
-            padding-left: 60px;
+            padding-left: 40px;
             font-weight: 500;
         }
     </style>
@@ -241,19 +226,12 @@
 
     <div class="sidebar" id="sidebar-menu">
         <div class="brand"><span class="brand-sparkle">✦</span> Next AI</div>
-        
-        <button class="new-chat-btn" onclick="startNewChat()">📝 New chat</button>
-        
-        <button class="nav-btn">🔍 Search chats</button>
-        <button class="nav-btn">🖼️ Images</button>
-        <button class="nav-btn">🎬 Videos</button>
-        <button class="nav-btn">📂 Library</button>
-        
+        <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
         <div class="section-title">Recents</div>
         <div class="history-container" id="history-list"></div>
     </div>
 
-    <div class="main-chat">
+    <div class="main-chat" id="main-chat-window">
         <button class="menu-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
 
         <div class="chat-box" id="chat-stream">
@@ -287,169 +265,16 @@
 
         updateSidebarHistory();
 
-        // FIXED: Toggle Sidebar visibility function
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar-menu');
-            sidebar.classList.toggle('hidden');
+            document.getElementById('sidebar-menu').classList.toggle('hidden');
+            document.getElementById('main-chat-window').classList.toggle('full-width');
         }
 
-        // Cleans up Markdown layout formatting issues from Gemini API responses
         function formatAIResponse(text) {
             if (!text) return "";
-            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/^\*\s(.*)$/gm, '• $1');
-            formatted = formatted.replace(/\n/g, '<br>');
-            return formatted;
-        }
-
-        function showSelectedFile() {
-            const fileInput = document.getElementById('file-upload');
-            const previewName = document.getElementById('file-preview-name');
-            if (fileInput && fileInput.files.length > 0) {
-                previewName.innerText = "📄 Attached File: " + fileInput.files[0].name;
-            } else if (previewName) {
-                previewName.innerText = "";
-            }
-        }
-
-        function startNewChat() {
-            currentSessionId = "session_" + Math.random().toString(36).substring(2, 9);
-            activeSessionsList.push(currentSessionId);
-            localStorage.setItem('device_sessions', JSON.stringify(activeSessionsList));
             
-            document.getElementById('chat-stream').innerHTML = `
-                <div class="message-row">
-                    <div class="sender-name sender-next">Next AI</div>
-                    <div class="message-text">Hello! I am Next AI. Enter a prompt below to start a new history record thread.</div>
-                </div>
-            `;
-            document.getElementById('user-prompt').value = "";
-            if(document.getElementById('file-upload')) document.getElementById('file-upload').value = "";
-            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
-            updateSidebarHistory();
-        }
+            // Clean markdown code snippet wrapper blocks
+            let formatted = text.replace(/
+http://googleusercontent.com/immersive_entry_chip/0
 
-        function loadSession(sid) {
-            currentSessionId = sid;
-            const chatStream = document.getElementById('chat-stream');
-            chatStream.innerHTML = `
-                <div class="message-row">
-                    <div class="sender-name sender-next">Next AI</div>
-                    <div class="message-text" style="color: #aaa;">Syncing chat logs...</div>
-                </div>
-            `;
-            
-            const formData = new FormData();
-            formData.append("message", "Provide a quick history refresher summary for this thread.");
-            formData.append("session_id", sid);
-
-            fetch('/api/chat', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                chatStream.innerHTML = "";
-                if (data.response) {
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name sender-next">Next AI</div>
-                            <div class="message-text">${formatAIResponse(data.response)}</div>
-                        </div>
-                    `;
-                } else {
-                    chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Empty thread active. Type a message below!</div></div>`;
-                }
-                chatStream.scrollTop = chatStream.scrollHeight;
-            })
-            .catch(() => {
-                chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Thread loaded. Continue typing below.</div></div>`;
-            });
-        }
-
-        function updateSidebarHistory() {
-            fetch('/api/history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ "session_ids": activeSessionsList })
-            })
-            .then(res => res.json())
-            .then(data => {
-                const historyList = document.getElementById('history-list');
-                if (!historyList) return;
-                historyList.innerHTML = "";
-                if (data && data.length > 0) {
-                    data.forEach(item => {
-                        historyList.innerHTML += `
-                            <div class="history-item" onclick="loadSession('${item.session_id}')" style="cursor: pointer;" title="${item.title}">
-                                💬 ${item.title}
-                            </div>
-                        `;
-                    });
-                }
-            }).catch(err => console.log("History sync active.", err));
-        }
-
-        function sendMessage() {
-            const textInput = document.getElementById('user-prompt');
-            const fileInput = document.getElementById('file-upload');
-            const chatStream = document.getElementById('chat-stream');
-            
-            const message = textInput.value.trim();
-            const hasFile = fileInput && fileInput.files.length > 0;
-            
-            if (!message && !hasFile) return;
-
-            let userDisplay = message;
-            if (hasFile) {
-                userDisplay = (message ? message + "<br>" : "") + `<small style="color:#8ab4f8; font-weight:bold;">📎 Attached: ${fileInput.files[0].name}</small>`;
-            }
-            
-            chatStream.innerHTML += `
-                <div class="message-row user-row">
-                    <div class="sender-name sender-you">You</div>
-                    <div class="message-text">${userDisplay}</div>
-                </div>
-            `;
-            chatStream.scrollTop = chatStream.scrollHeight;
-
-            const formData = new FormData();
-            formData.append("message", message);
-            formData.append("session_id", currentSessionId);
-            if (hasFile) {
-                formData.append("file", fileInput.files[0]);
-            }
-
-            textInput.value = "";
-            if(fileInput) fileInput.value = "";
-            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
-
-            fetch('/api/chat', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.response) {
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name sender-next">Next AI</div>
-                            <div class="message-text">${formatAIResponse(data.response)}</div>
-                        </div>
-                    `;
-                } else {
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name" style="color: red;">Error</div>
-                            <div class="message-text">${data.error || 'Connection dropped.'}</div>
-                        </div>
-                    `;
-                }
-                chatStream.scrollTop = chatStream.scrollHeight;
-                updateSidebarHistory(); 
-            })
-            .catch(err => console.error(err));
-        }
-    </script>
-</body>
-</html>
+Go back to Render, tap **Manual Deploy** -> **Deploy latest commit**, and give it a moment to complete. Everything will work properly!
