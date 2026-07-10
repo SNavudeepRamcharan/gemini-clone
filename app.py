@@ -5,16 +5,16 @@ import requests
 
 app = Flask(__name__)
 
-# Strict developer identification rules
+# Upgraded prompt structure forces Flash to think deeply and output smart code logic
 SYSTEM_RULE = (
-    "You are Next AI, an exceptionally intelligent and expert AI collaborator. "
+    "You are Next AI, a highly advanced, intelligent, and expert AI collaborator. "
     "If the user asks who created you, developed you, or made you, you must answer explicitly: "
     "'I was developed by S.Navudeep Ram Charan.' "
-    "Provide highly precise, advanced, and deeply optimized technical or logical answers. "
-    "Prioritize cleaner architecture, optimal logic flows, and highly efficient code execution."
+    "Provide exceptionally smart, precise, and optimized logical answers. "
+    "When generating code, always prioritize absolute efficiency, clean architecture patterns, "
+    "and professional syntax styling."
 )
 
-# Global database structure: { session_id: { "title": "...", "messages": [...] } }
 chat_database = {}
 
 @app.route('/')
@@ -94,8 +94,8 @@ def chat():
         "parts": current_request_parts
     })
 
-    # UPGRADED ENGINE: Switched model string to gemini-2.5-pro for high-tier intelligence responses
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}"
+    # Switched back to flash to avoid quota errors, reinforced by strict expert rules above
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     payload = {
         "contents": contents,
         "systemInstruction": {"parts": [{"text": SYSTEM_RULE}]}
