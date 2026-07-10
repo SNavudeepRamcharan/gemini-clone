@@ -8,7 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {
+        /* Modern Dynamic Theme Token Definitions */
+        :root[theme="dark"] {
             --bg-main: #0b0b0c;
             --bg-sidebar: #121214;
             --bg-surface: #1e1f22;
@@ -20,6 +21,23 @@
             --accent-blue: #3b82f6;
             --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             --border-color: #26272b;
+        }
+
+        :root[theme="light"] {
+            --bg-main: #ffffff;
+            --bg-sidebar: #f4f5f6;
+            --bg-surface: #eaeaea;
+            --bg-surface-hover: #dddfeb;
+            --bg-input: #f0f1f4;
+            --text-primary: #1a1a1e;
+            --text-secondary: #4a4d52;
+            --text-muted: #8c8f94;
+            --accent-blue: #2563eb;
+            --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            --border-color: #e2e8f0;
+        }
+
+        :root {
             --font-sans: 'Plus Jakarta Sans', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
             --sidebar-width: 280px;
@@ -43,6 +61,7 @@
             display: flex;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .app-container {
@@ -52,7 +71,7 @@
             position: relative;
         }
 
-        /* Sidebar Dashboard Panel */
+        /* Sidebar Dashboard Layout */
         .sidebar {
             width: var(--sidebar-width);
             background-color: var(--bg-sidebar);
@@ -225,7 +244,7 @@
         .user-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
         .user-status { font-size: 11px; color: var(--text-muted); }
 
-        /* Workspace Pane Layout */
+        /* Main Workspace Layout */
         .workspace {
             flex: 1;
             display: flex;
@@ -234,6 +253,7 @@
             background-color: var(--bg-main);
             position: relative;
             overflow: hidden;
+            transition: background-color 0.3s ease;
         }
 
         .top-navbar {
@@ -241,9 +261,9 @@
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0 24px;
-            gap: 16px;
-            background-color: rgba(11, 11, 12, 0.8);
+            background-color: rgba(11, 11, 12, 0.2);
             backdrop-filter: blur(12px);
             position: absolute;
             top: 0;
@@ -252,7 +272,13 @@
             z-index: 30;
         }
 
-        .btn-toggle-sidebar {
+        .navbar-left-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-toggle-sidebar, .btn-theme-toggle {
             background: none;
             border: none;
             color: var(--text-secondary);
@@ -265,7 +291,7 @@
             transition: var(--transition-smooth);
         }
 
-        .btn-toggle-sidebar:hover {
+        .btn-toggle-sidebar:hover, .btn-theme-toggle:hover {
             color: var(--text-primary);
             background-color: var(--bg-surface);
         }
@@ -285,7 +311,7 @@
 
         .chat-thread-width-restrictor { width: 100%; max-width: 800px; display: flex; flex-direction: column; }
 
-        /* Welcome Dashboard Menu Cards */
+        /* Welcome Cards Dashboard */
         .welcome-dashboard {
             display: flex;
             flex-direction: column;
@@ -334,7 +360,7 @@
         .suggestion-header { font-size: 14px; font-weight: 600; color: var(--text-primary); }
         .suggestion-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
 
-        /* Message Node Layout Styles */
+        /* Chat Message Items Layout */
         .msg-row { display: flex; margin-bottom: 32px; animation: fadeInUp 0.35s ease-out forwards; position: relative; width: 100%; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .msg-row.user-variant { justify-content: flex-end; }
@@ -373,21 +399,22 @@
         }
         .btn-inline-edit:hover { color: var(--accent-blue); background-color: var(--bg-surface-hover); }
 
-        /* Code highlight payload structural configurations */
+        /* Codeblock Elements Layout styling updates */
         .code-block-container { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin: 16px 0; overflow: hidden; font-family: var(--font-mono); width: 100%; }
         .code-block-header { background-color: var(--bg-sidebar); padding: 10px 16px; font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); font-weight: 500; }
         .btn-copy-code { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; transition: var(--transition-smooth); }
         .btn-copy-code:hover { color: var(--text-primary); }
-        .code-block-payload { padding: 16px; overflow-x: auto; font-size: 14px; color: #e5e7eb; white-space: pre; line-height: 1.5; text-align: left; }
+        .code-block-payload { padding: 16px; overflow-x: auto; font-size: 14px; color: var(--text-primary); white-space: pre; line-height: 1.5; text-align: left; }
+        .code-block-payload::-webkit-scrollbar { display: none; }
 
-        /* Floating Typing State Indicator */
+        /* Floating Typing Animation */
         .typing-indicator-wrapper { display: flex; align-items: center; gap: 4px; padding: 12px 0; }
         .typing-dot { width: 6px; height: 6px; background-color: var(--text-muted); border-radius: 50%; animation: dotPulse 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes dotPulse { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
 
-        /* Bottom Command Input Dock Layout */
+        /* Bottom Entry Panel */
         .dock-input-boundary { position: absolute; bottom: 0; left: 0; right: 0; padding: 0 24px 32px 24px; background: linear-gradient(180deg, rgba(11, 11, 12, 0) 0%, rgba(11, 11, 12, 0.95) 40%, var(--bg-main) 100%); display: flex; justify-content: center; z-index: 20; }
         .dock-input-inner { width: 100%; max-width: 800px; display: flex; flex-direction: column; }
         
@@ -399,8 +426,33 @@
         .input-action-trigger.recording-pulse { color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.15); animation: micPulse 1.3s infinite ease-in-out; }
         @keyframes micPulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
 
-        .prompt-textarea { flex: 1; background: none; border: none; outline: none; color: var(--text-primary); font-family: var(--font-sans); font-size: 15px; line-height: 1.5; resize: none; height: 22px; max-height: 200px; padding: 8px 0; box-sizing: border-box; }
+        /* REMOVED ARROWS: Hidden default scroll handles and spins from input text container completely */
+        .prompt-textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 15px;
+            line-height: 1.5;
+            resize: none;
+            height: 22px;
+            max-height: 200px;
+            padding: 8px 0;
+            box-sizing: border-box;
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+        .prompt-textarea::-webkit-scrollbar { display: none; } /* Chrome/Safari */
         .prompt-textarea::placeholder { color: var(--text-muted); }
+
+        /* Explicitly hiding any standard HTML spin arrow elements */
+        .prompt-textarea::-webkit-outer-spin-button,
+        .prompt-textarea::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
         .btn-submit-prompt { background-color: var(--text-primary); color: var(--bg-main); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); flex-shrink: 0; margin-bottom: 2px; }
         .btn-submit-prompt:hover { background-color: #fff; transform: scale(1.04); }
@@ -416,6 +468,7 @@
 <body>
 
     <div class="app-container">
+        <!-- Sidebar Dashboard Menu -->
         <div class="sidebar" id="sidebar-menu">
             <div class="sidebar-header">
                 <a href="#" class="brand-wrapper" onclick="startNewChat()">
@@ -443,12 +496,20 @@
             </div>
         </div>
 
+        <!-- Main Workspace -->
         <div class="workspace" id="main-chat-window">
             <header class="top-navbar">
-                <button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Toggle Menu Panels">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <div class="navbar-left-group">
+                    <button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Toggle Menu Panels">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <div class="navbar-title" id="active-thread-title">Next AI Workspace</div>
+                </div>
+                
+                <!-- NEW THEME SWITCH TOGGLE ACTION TRIGGER -->
+                <button class="btn-theme-toggle" onclick="toggleAppThemeStyle()" title="Change Dashboard Theme">
+                    <svg id="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
                 </button>
-                <div class="navbar-title" id="active-thread-title">Next AI Workspace</div>
             </header>
 
             <div class="chat-container-viewport" id="chat-scroller">
@@ -503,6 +564,11 @@
         let activeSessionsMetadata = JSON.parse(localStorage.getItem('sessions_metadata')) || [];
         localStorage.setItem('current_session_id', currentSessionId);
 
+        // Core Theme Mapping Setup
+        let activeTheme = localStorage.getItem('app-ui-theme') || 'dark';
+        document.documentElement.setAttribute('theme', activeTheme);
+        updateThemeToggleButtonIcon();
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let voiceRecognizer = null;
         let isRecordingVoice = false;
@@ -517,7 +583,7 @@
                 document.getElementById('user-prompt').value = event.results[0][0].transcript;
                 autoExpandTextarea(document.getElementById('user-prompt'));
                 stopVoiceRecognition();
-                executePromptSubmission(true); // Pass true because it came from a voice recording
+                executePromptSubmission(true);
             };
 
             voiceRecognizer.onerror = () => stopVoiceRecognition();
@@ -528,6 +594,25 @@
 
         function toggleSidebar() {
             document.getElementById('sidebar-menu').classList.toggle('hidden');
+        }
+
+        // DYNAMIC THEME ENGINE FUNCTIONS
+        function toggleAppThemeStyle() {
+            activeTheme = (activeTheme === 'dark') ? 'light' : 'dark';
+            document.documentElement.setAttribute('theme', activeTheme);
+            localStorage.setItem('app-ui-theme', activeTheme);
+            updateThemeToggleButtonIcon();
+        }
+
+        function updateThemeToggleButtonIcon() {
+            const container = document.getElementById('theme-icon');
+            if(activeTheme === 'dark') {
+                // Sun Icon SVG mapping logic
+                container.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+            } else {
+                // Moon Icon SVG mapping logic
+                container.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+            }
         }
 
         function autoExpandTextarea(element) {
@@ -604,7 +689,7 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 let cleanText = textString.replace(/<\/?[^>]+(>|$)/g, "").replace(/[•\*`]/g, "").trim();
-                if(cleanText.length > 300) cleanText = cleanText.substring(0, 300) + "... Data analysis stream complete.";
+                if(cleanText.length > 300) cleanText = cleanText.substring(0, 300) + "... Data stream complete.";
                 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'en-US';
@@ -625,7 +710,6 @@
         function formatAIResponse(text) {
             if (!text) return "";
             
-            // Format Markdown Code Blocks
             let formatted = text.replace(/```([a-zA-Z0-9_-]+)?([\s\S]*?)```/g, function(match, lang, codeBody) {
                 let displayLang = (lang || 'code').toUpperCase();
                 let escapedBody = codeBody.trim();
@@ -645,10 +729,7 @@
                 `;
             });
             
-            // Format Markdown Bolding
-            formatted = formatted.replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>');
-            
-            // Format Lists
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             formatted = formatted.replace(/^\s*[\*•]\s+(.*)$/gm, '• $1');
             
             let segments = formatted.split(/(<div class="code-block-container"[\s\S]*?<\/div>\s*<\/div>)/);
