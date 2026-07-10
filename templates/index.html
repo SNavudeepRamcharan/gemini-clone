@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* Modern Dynamic Theme Token Definitions */
         :root[theme="dark"] {
             --bg-main: #0b0b0c;
             --bg-sidebar: #121214;
@@ -191,6 +190,7 @@
         }
 
         .history-node-icon { color: var(--text-secondary); flex-shrink: 0; }
+        
         .history-node-title {
             font-size: 14px;
             color: var(--text-secondary);
@@ -214,6 +214,9 @@
             border-radius: 4px;
             opacity: 0;
             transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .history-wrapper-node:hover .history-node-delete { opacity: 1; }
@@ -418,15 +421,28 @@
         .dock-input-boundary { position: absolute; bottom: 0; left: 0; right: 0; padding: 0 24px 32px 24px; background: linear-gradient(180deg, rgba(11, 11, 12, 0) 0%, rgba(11, 11, 12, 0.95) 40%, var(--bg-main) 100%); display: flex; justify-content: center; z-index: 20; }
         .dock-input-inner { width: 100%; max-width: 800px; display: flex; flex-direction: column; }
         
-        .interactive-input-box { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 24px; padding: 8px 14px 8px 18px; display: flex; align-items: flex-end; gap: 12px; transition: var(--transition-smooth); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); }
+        /* FIXED INPUT AREA: Completely clean background borders without hidden overlay artifact structures */
+        .interactive-input-box { 
+            background-color: var(--bg-input); 
+            border: 1px solid var(--border-color); 
+            border-radius: 24px; 
+            padding: 8px 14px 8px 18px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            transition: var(--transition-smooth); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
+            min-height: 52px;
+            box-sizing: border-box;
+        }
         .interactive-input-box:focus-within { border-color: var(--text-muted); }
 
-        .input-action-trigger { background: none; border: none; color: var(--text-secondary); cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); flex-shrink: 0; margin-bottom: 2px; }
+        .input-action-trigger { background: none; border: none; color: var(--text-secondary); cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); flex-shrink: 0; }
         .input-action-trigger:hover { color: var(--text-primary); background-color: var(--bg-surface); }
         .input-action-trigger.recording-pulse { color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.15); animation: micPulse 1.3s infinite ease-in-out; }
         @keyframes micPulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
 
-        /* REMOVED ARROWS: Hidden default scroll handles and spins from input text container completely */
+        /* FIXED: Hidden spin handles and fully normalized content layers */
         .prompt-textarea {
             flex: 1;
             background: none;
@@ -435,26 +451,26 @@
             color: var(--text-primary);
             font-family: var(--font-sans);
             font-size: 15px;
-            line-height: 1.5;
+            line-height: 1.4;
             resize: none;
             height: 22px;
-            max-height: 200px;
-            padding: 8px 0;
+            max-height: 160px;
+            padding: 2px 0;
             box-sizing: border-box;
             overflow-y: auto;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
+            display: block;
         }
-        .prompt-textarea::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .prompt-textarea::-webkit-scrollbar { display: none; }
         .prompt-textarea::placeholder { color: var(--text-muted); }
 
-        /* Explicitly hiding any standard HTML spin arrow elements */
         .prompt-textarea::-webkit-outer-spin-button,
         .prompt-textarea::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
 
-        .btn-submit-prompt { background-color: var(--text-primary); color: var(--bg-main); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); flex-shrink: 0; margin-bottom: 2px; }
+        .btn-submit-prompt { background-color: var(--text-primary); color: var(--bg-main); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition-smooth); flex-shrink: 0; }
         .btn-submit-prompt:hover { background-color: #fff; transform: scale(1.04); }
         .btn-submit-prompt:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; transform: none; }
 
@@ -506,7 +522,6 @@
                     <div class="navbar-title" id="active-thread-title">Next AI Workspace</div>
                 </div>
                 
-                <!-- NEW THEME SWITCH TOGGLE ACTION TRIGGER -->
                 <button class="btn-theme-toggle" onclick="toggleAppThemeStyle()" title="Change Dashboard Theme">
                     <svg id="theme-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
                 </button>
@@ -564,7 +579,6 @@
         let activeSessionsMetadata = JSON.parse(localStorage.getItem('sessions_metadata')) || [];
         localStorage.setItem('current_session_id', currentSessionId);
 
-        // Core Theme Mapping Setup
         let activeTheme = localStorage.getItem('app-ui-theme') || 'dark';
         document.documentElement.setAttribute('theme', activeTheme);
         updateThemeToggleButtonIcon();
@@ -596,7 +610,6 @@
             document.getElementById('sidebar-menu').classList.toggle('hidden');
         }
 
-        // DYNAMIC THEME ENGINE FUNCTIONS
         function toggleAppThemeStyle() {
             activeTheme = (activeTheme === 'dark') ? 'light' : 'dark';
             document.documentElement.setAttribute('theme', activeTheme);
@@ -607,17 +620,15 @@
         function updateThemeToggleButtonIcon() {
             const container = document.getElementById('theme-icon');
             if(activeTheme === 'dark') {
-                // Sun Icon SVG mapping logic
                 container.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
             } else {
-                // Moon Icon SVG mapping logic
                 container.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
             }
         }
 
         function autoExpandTextarea(element) {
             element.style.height = '22px';
-            element.style.height = (element.scrollHeight - 6) + 'px';
+            element.style.height = Math.min(element.scrollHeight - 4, 160) + 'px';
             document.getElementById('send-btn').disabled = (element.value.trim().length === 0 && !hasActiveFileAttached());
         }
 
@@ -922,8 +933,14 @@
             appendMessageNodeToDOM('You', displayPrompt, true);
             scroller.scrollTop = scroller.scrollHeight;
 
+            // FIXED BLANK DATA: Safeguards metadata to ensure titles are never assigned empty values
             if (!activeSessionsMetadata.some(item => item.session_id === currentSessionId)) {
-                let initialTitle = message ? (message.length <= 22 ? message : message.substring(0,19) + "...") : "Asset Analysis";
+                let initialTitle = "Asset Analysis 📄";
+                if (message) {
+                    initialTitle = message.length <= 22 ? message : message.substring(0,19) + "...";
+                } else if (hasFile) {
+                    initialTitle = fileInput.files[0].name.length <= 22 ? fileInput.files[0].name : fileInput.files[0].name.substring(0,19) + "...";
+                }
                 activeSessionsMetadata.unshift({ "session_id": currentSessionId, "title": initialTitle });
                 localStorage.setItem('sessions_metadata', JSON.stringify(activeSessionsMetadata));
                 document.getElementById('active-thread-title').innerText = initialTitle;
