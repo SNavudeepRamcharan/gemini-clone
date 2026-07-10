@@ -11,7 +11,7 @@ SYSTEM_RULE = (
     "who developed you, who made you, or anything about your creator, you must answer explicitly: "
     "'I was developed by S.Navudeep Ram Charan.' "
     "For all other prompts, be an authentic, adaptive, and helpful collaborator with a touch of wit. "
-    "You have advanced multimodal research and study capabilities, allowing you to analyze images, data sheets, and text files."
+    "You have advanced multimodal research capabilities and full hands-free voice support."
 )
 
 # Global database structure: { session_id: { "title": "...", "messages": [...] } }
@@ -33,9 +33,17 @@ def get_specific_history():
             summary.append({"session_id": sid, "title": chat_database[sid]["title"]})
     return jsonify(summary)
 
+@app.route('/api/load_session', methods=['POST'])
+def load_session_history():
+    """Returns all messages for a specific session to restore the chat log on reload."""
+    data = request.json or {}
+    session_id = data.get("session_id")
+    if session_id in chat_database:
+        return jsonify({"messages": chat_database[session_id]["messages"]})
+    return jsonify({"messages": []})
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    # Since files are uploaded, data comes through form/files multipart, not request.json
     user_message = request.form.get("message", "")
     session_id = request.form.get("session_id", "default")
     uploaded_file = request.files.get("file")
@@ -56,17 +64,14 @@ def chat():
             "messages": []
         }
 
-    # Structure payload parts for the immediate API request
     current_request_parts = []
 
-    # Process file processing into base64 if present
     if uploaded_file and uploaded_file.filename != '':
         try:
             file_bytes = uploaded_file.read()
             base64_data = base64.b64encode(file_bytes).decode('utf-8')
             mime_type = uploaded_file.content_type
             
-            # Attach file directly into request parts
             current_request_parts.append({
                 "inlineData": {
                     "mimeType": mime_type,
@@ -76,21 +81,17 @@ def chat():
         except Exception as file_err:
             return jsonify({"error": f"Failed to process file: {str(file_err)}"}), 400
 
-    # Attach text prompt parts
     if user_message:
         current_request_parts.append({"text": user_message})
-        # Save user text message to memory tracking database
         chat_database[session_id]["messages"].append({"role": "user", "text": user_message})
 
-    # Build entire conversation contents list for contextual memory
     contents = []
-    for msg in chat_database[session_id]["messages"][:-1]:  # historical records
+    for msg in chat_database[session_id]["messages"][:-1]:
         contents.append({
             "role": "user" if msg["role"] == "user" else "model",
             "parts": [{"text": msg["text"]}]
         })
         
-    # Append the fresh payload (text + file) to the active API conversation contents
     contents.append({
         "role": "user",
         "parts": current_request_parts
@@ -110,8 +111,6 @@ def chat():
             return jsonify({"error": f"API Error Response: {response_data}"}), 400
             
         ai_response = response_data['candidates'][0]['content']['parts'][0]['text']
-        
-        # Save model responses to memory tracking database
         chat_database[session_id]["messages"].append({"role": "model", "text": ai_response})
         return jsonify({"response": ai_response})
 

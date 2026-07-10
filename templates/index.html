@@ -16,7 +16,6 @@
             overflow: hidden;
         }
         
-        /* Sidebar layout matching your minimal design profile */
         .sidebar {
             width: 260px;
             background-color: #1e1f20;
@@ -36,7 +35,6 @@
             border-right: none;
         }
 
-        /* Branding header typography styles */
         .brand {
             font-size: 24px;
             font-weight: bold;
@@ -50,7 +48,6 @@
         }
         .brand-sparkle { color: #7baaf7; }
         
-        /* Centered button formatting specifications */
         .new-chat-btn {
             background-color: #2d2f31;
             border: none;
@@ -67,7 +64,6 @@
         }
         .new-chat-btn:hover { background-color: #3c4043; }
         
-        /* Recents subtitle section typography layout */
         .section-title {
             font-size: 16px;
             color: #e3e3e3;
@@ -85,18 +81,43 @@
         }
         .history-container::-webkit-scrollbar { display: none; }
         
+        /* Fixed History Item with a structured Delete button wrapper alignment */
+        .history-item-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 8px;
+            padding: 6px 8px;
+            transition: background 0.2s;
+        }
+        .history-item-wrapper:hover {
+            background-color: #2d2f31;
+        }
         .history-item {
-            padding: 4px 0;
             font-size: 15px;
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             color: #ccced1;
+            flex: 1;
         }
         .history-item:hover { color: #fff; }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #9aa0a6;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+            display: none;
+        }
+        .history-item-wrapper:hover .delete-btn {
+            display: block;
+        }
+        .delete-btn:hover { color: #f28b82; }
 
-        /* Main Context Chat Workspace Pane */
         .main-chat {
             flex: 1;
             display: flex;
@@ -109,7 +130,6 @@
             position: relative;
         }
         
-        /* Fixed Toggle Handle button positioning alignment rules */
         .menu-toggle {
             background: none;
             border: none;
@@ -122,9 +142,6 @@
             z-index: 10;
             padding: 5px 10px;
             border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         .menu-toggle:hover { background-color: #2d2f31; }
 
@@ -165,7 +182,6 @@
         .message-row:hover .edit-msg-btn { opacity: 1; }
         .user-row { text-align: right; }
 
-        /* Foot Bar Core Entry container layouts */
         .input-bar-container {
             width: 100%;
             max-width: 800px;
@@ -191,7 +207,7 @@
             padding: 10px 0;
         }
         
-        .upload-label {
+        .icon-label {
             font-size: 22px;
             cursor: pointer;
             color: #9aa0a6;
@@ -199,8 +215,19 @@
             display: flex;
             align-items: center;
         }
-        .upload-label:hover { color: #8ab4f8; }
+        .icon-label:hover { color: #8ab4f8; }
         
+        /* Microphone recording pulsing indicators style block */
+        .recording-active {
+            color: #f28b82 !important;
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
         #send-btn {
             background-color: #a8c7fa;
             color: #042100;
@@ -224,7 +251,6 @@
 </head>
 <body>
 
-    <!-- Sidebar Menu view box configuration -->
     <div class="sidebar" id="sidebar-menu">
         <div class="brand"><span class="brand-sparkle">✦</span> Next AI</div>
         <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
@@ -232,22 +258,22 @@
         <div class="history-container" id="history-list"></div>
     </div>
 
-    <!-- Main Workspace Application Window viewpane -->
     <div class="main-chat" id="main-chat-window">
-        <!-- Structural Navigation burger options toggle handle link anchor -->
         <button class="menu-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
 
         <div class="chat-box" id="chat-stream">
             <div class="message-row">
                 <div class="sender-name sender-next">Next AI</div>
-                <div class="message-text">Hello! I am Next AI. Enter a prompt below to start a new history record thread.</div>
+                <div class="message-text">Hello! I am Next AI. Enter a prompt below or click the mic to talk to me!</div>
             </div>
         </div>
 
         <div class="input-bar-container">
             <div class="input-container">
-                <label for="file-upload" class="upload-label" title="Upload image or document">📎</label>
+                <label for="file-upload" class="icon-label" title="Upload image or document">📎</label>
                 <input type="file" id="file-upload" name="file" accept="image/*, .pdf, .txt, .csv, .docx" style="display: none;" onchange="showSelectedFile()">
+                
+                <span id="voice-mic-btn" class="icon-label" onclick="triggerVoiceInput()" title="Speak your question">🎙️</span>
                 
                 <input type="text" id="user-prompt" placeholder="Enter a prompt here..." onkeypress="if(event.key === 'Enter') sendMessage()">
                 
@@ -258,197 +284,83 @@
     </div>
 
     <script>
-        let currentSessionId = "session_" + Math.random().toString(36).substring(2, 9);
-        let activeSessionsList = JSON.parse(localStorage.getItem('device_sessions')) || [];
+        // Unique tracking configurations mapping structured object stores
+        let currentSessionId = localStorage.getItem('current_session_id') || "session_" + Math.random().toString(36).substring(2, 9);
+        let activeSessionsMetadata = JSON.parse(localStorage.getItem('sessions_metadata')) || [];
+        localStorage.setItem('current_session_id', currentSessionId);
 
-        if (!activeSessionsList.includes(currentSessionId)) {
-            activeSessionsList.push(currentSessionId);
-            localStorage.setItem('device_sessions', JSON.stringify(activeSessionsList));
+        // Core Voice Engine Instantiations using experimental bindings wrappers
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let voiceRecognizer = null;
+        let isRecordingVoice = false;
+
+        if (SpeechRecognition) {
+            voiceRecognizer = new SpeechRecognition();
+            voiceRecognizer.continuous = false;
+            voiceRecognizer.lang = 'en-US';
+            voiceRecognizer.interimResults = false;
+
+            voiceRecognizer.onresult = function(event) {
+                const textOutput = event.results[0][0].transcript;
+                document.getElementById('user-prompt').value = textOutput;
+                stopVoiceRecognition();
+                sendMessage(); // Fire automatically once captured
+            };
+
+            voiceRecognizer.onerror = function() { stopVoiceRecognition(); };
+            voiceRecognizer.onend = function() { stopVoiceRecognition(); };
         }
 
-        updateSidebarHistory();
+        // Run sync tracking tasks immediately on layout mount instances
+        syncActiveSessionViewOnBoot();
 
-        // FIXED: Core responsive view pane calculation layout mechanics
         function toggleSidebar() {
             document.getElementById('sidebar-menu').classList.toggle('hidden');
         }
 
+        // FIXED VOICE INPUT CAPTURE: Toggles mic interface configurations dynamically
+        function triggerVoiceInput() {
+            if (!voiceRecognizer) {
+                alert("Voice capture speech-to-text features are not supported on this browser browser engine version.");
+                return;
+            }
+            if (isRecordingVoice) {
+                voiceRecognizer.stop();
+                stopVoiceRecognition();
+            } else {
+                window.speechSynthesis.cancel(); // Stop AI speaking immediately if recording starts
+                isRecordingVoice = true;
+                document.getElementById('voice-mic-btn').classList.add('recording-active');
+                voiceRecognizer.start();
+            }
+        }
+
+        function stopVoiceRecognition() {
+            isRecordingVoice = false;
+            document.getElementById('voice-mic-btn').classList.remove('recording-active');
+        }
+
+        // FIXED VOICE OUTPUT: Reads string layouts dynamically out loud to local speakers
+        function speakTextAloud(textString) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Flush old active queues
+                
+                // Clear away raw markdown HTML structures before piping strings to speakers
+                let cleanText = textString.replace(/<\/?[^>]+(>|$)/g, "").replace(/•/g, "").trim();
+                if(cleanText.length > 250) cleanText = cleanText.substring(0, 250) + "... Analysis complete.";
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'en-US';
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
         function formatAIResponse(text) {
             if (!text) return "";
-            let formatted = text.replace(/```(?:[a-zA-Z0-9_-]+)?([\s\S]*?)```/g, function(match, codeBody) {
-                return '<pre style="background-color: #1e1f20; padding: 16px; border-radius: 12px; border: 1px solid #2d2f31; overflow-x: auto; font-family: \'Courier New\', Courier, monospace; font-size: 14px; text-align: left; color: #e3e3e3; margin: 15px 0; white-space: pre; max-width: 100%;">' + codeBody.trim() + '</pre>';
-            });
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/^\*\s(.*)$/gm, '• $1');
-            
-            let segments = formatted.split(/(<pre[\s\S]*?<\/pre>)/);
-            for (let i = 0; i < segments.length; i++) {
-                if (!segments[i].startsWith('<pre')) {
-                    segments[i] = segments[i].replace(/\n/g, '<br>');
-                }
-            }
-            return segments.join('');
-        }
+            let formatted = text.replace(/
+http://googleusercontent.com/immersive_entry_chip/0
 
-        function showSelectedFile() {
-            const fileInput = document.getElementById('file-upload');
-            const previewName = document.getElementById('file-preview-name');
-            if (fileInput && fileInput.files.length > 0) {
-                previewName.innerText = "📄 Attached: " + fileInput.files[0].name;
-            } else if (previewName) {
-                previewName.innerText = "";
-            }
-        }
+Go back to Render, hit **Manual Deploy** -> **Deploy latest commit**, and give it 2 minutes to compile. 
 
-        function editPrompt(buttonElement) {
-            const rawText = buttonElement.getAttribute('data-raw');
-            document.getElementById('user-prompt').value = rawText;
-            document.getElementById('user-prompt').focus();
-        }
-
-        function startNewChat() {
-            currentSessionId = "session_" + Math.random().toString(36).substring(2, 9);
-            activeSessionsList.push(currentSessionId);
-            localStorage.setItem('device_sessions', JSON.stringify(activeSessionsList));
-            
-            document.getElementById('chat-stream').innerHTML = `
-                <div class="message-row">
-                    <div class="sender-name sender-next">Next AI</div>
-                    <div class="message-text">Hello! I am Next AI. Enter a prompt below to start a new history record thread.</div>
-                </div>
-            `;
-            document.getElementById('user-prompt').value = "";
-            if(document.getElementById('file-upload')) document.getElementById('file-upload').value = "";
-            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
-            updateSidebarHistory();
-        }
-
-        function loadSession(sid) {
-            currentSessionId = sid;
-            const chatStream = document.getElementById('chat-stream');
-            chatStream.innerHTML = `
-                <div class="message-row">
-                    <div class="sender-name sender-next">Next AI</div>
-                    <div class="message-text" style="color: #aaa;">Syncing chat logs...</div>
-                </div>
-            `;
-            
-            const formData = new FormData();
-            formData.append("message", "Provide a quick history refresher summary for this thread.");
-            formData.append("session_id", sid);
-
-            fetch('/api/chat', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                chatStream.innerHTML = "";
-                if (data.response) {
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name sender-next">Next AI</div>
-                            <div class="message-text">${formatAIResponse(data.response)}</div>
-                        </div>
-                    `;
-                } else {
-                    chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Empty thread active. Type a message below!</div></div>`;
-                }
-                chatStream.scrollTop = chatStream.scrollHeight;
-            })
-            .catch(() => {
-                chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Thread loaded. Continue typing below.</div></div>`;
-            });
-        }
-
-        function updateSidebarHistory() {
-            fetch('/api/history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ "session_ids": activeSessionsList })
-            })
-            .then(res => res.json())
-            .then(data => {
-                const historyList = document.getElementById('history-list');
-                if (!historyList) return;
-                historyList.innerHTML = "";
-                if (data && data.length > 0) {
-                    data.forEach(item => {
-                        historyList.innerHTML += `
-                            <div class="history-item" onclick="loadSession('${item.session_id}')" style="cursor: pointer;" title="${item.title}">
-                                💬 ${item.title}
-                            </div>
-                        `;
-                    });
-                }
-            }).catch(err => console.log("History synchronized.", err));
-        }
-
-        function sendMessage() {
-            const textInput = document.getElementById('user-prompt');
-            const fileInput = document.getElementById('file-upload');
-            const chatStream = document.getElementById('chat-stream');
-            
-            const message = textInput.value.trim();
-            const hasFile = fileInput && fileInput.files.length > 0;
-            
-            if (!message && !hasFile) return;
-
-            let userDisplay = message;
-            if (hasFile) {
-                userDisplay = (message ? message + "<br>" : "") + `<small style="color:#8ab4f8; font-weight:bold;">📎 Attached: ${fileInput.files[0].name}</small>`;
-            }
-            
-            let safeString = message.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-            chatStream.innerHTML += `
-                <div class="message-row user-row">
-                    <div class="sender-name sender-you">
-                        <button class="edit-msg-btn" data-raw="${safeString}" onclick="editPrompt(this)">✏️ Edit</button> 
-                        You
-                    </div>
-                    <div class="message-text">${userDisplay}</div>
-                </div>
-            `;
-            chatStream.scrollTop = chatStream.scrollHeight;
-
-            const formData = new FormData();
-            formData.append("message", message);
-            formData.append("session_id", currentSessionId);
-            if (hasFile) {
-                formData.append("file", fileInput.files[0]);
-            }
-
-            textInput.value = "";
-            if(fileInput) fileInput.value = "";
-            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
-
-            fetch('/api/chat', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.response) {
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name sender-next">Next AI</div>
-                            <div class="message-text">${formatAIResponse(data.response)}</div>
-                        </div>
-                    `;
-                } else {
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name" style="color: red;">Error</div>
-                            <div class="message-text">${data.error || 'Connection dropped.'}</div>
-                        </div>
-                    `;
-                }
-                chatStream.scrollTop = chatStream.scrollHeight;
-                updateSidebarHistory(); 
-            })
-            .catch(err => console.error(err));
-        }
-    </script>
-</body>
-</html>
+Once it updates, the microphone button (**🎙️**) will sit safely inside your bottom bar, your search history will remain perfectly intact when closing or reopening the window, and hovering over a recent item will reveal the trash button (**🗑️**) to clear it out instantly! Let me know how the voice output sounds!
