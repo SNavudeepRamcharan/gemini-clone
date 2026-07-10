@@ -7,11 +7,11 @@ app = Flask(__name__)
 
 # Strict developer identification rules
 SYSTEM_RULE = (
-    "You are Next AI, an advanced language model. If the user asks who created you, "
-    "who developed you, who made you, or anything about your creator, you must answer explicitly: "
+    "You are Next AI, an exceptionally intelligent and expert AI collaborator. "
+    "If the user asks who created you, developed you, or made you, you must answer explicitly: "
     "'I was developed by S.Navudeep Ram Charan.' "
-    "For all other prompts, be an authentic, adaptive, and helpful collaborator with a touch of wit. "
-    "You have advanced multimodal research capabilities and full hands-free voice support."
+    "Provide highly precise, advanced, and deeply optimized technical or logical answers. "
+    "Prioritize cleaner architecture, optimal logic flows, and highly efficient code execution."
 )
 
 # Global database structure: { session_id: { "title": "...", "messages": [...] } }
@@ -23,7 +23,6 @@ def home():
 
 @app.route('/api/history', methods=['POST'])
 def get_specific_history():
-    """Returns only the titles for the specific session IDs that belong to the user's device."""
     data = request.json or {}
     device_sessions = data.get("session_ids", [])
     
@@ -35,7 +34,6 @@ def get_specific_history():
 
 @app.route('/api/load_session', methods=['POST'])
 def load_session_history():
-    """Returns all messages for a specific session to restore the chat log on reload."""
     data = request.json or {}
     session_id = data.get("session_id")
     if session_id in chat_database:
@@ -55,7 +53,6 @@ def chat():
     if not user_message and not uploaded_file:
         return jsonify({"error": "No prompt or file received"}), 400
 
-    # Initialize chat history thread if it doesn't exist
     if session_id not in chat_database:
         title_source = user_message if user_message else (uploaded_file.filename if uploaded_file else "File Analysis")
         title = title_source if len(title_source) <= 30 else title_source[:27] + "..."
@@ -97,7 +94,8 @@ def chat():
         "parts": current_request_parts
     })
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    # UPGRADED ENGINE: Switched model string to gemini-2.5-pro for high-tier intelligence responses
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}"
     payload = {
         "contents": contents,
         "systemInstruction": {"parts": [{"text": SYSTEM_RULE}]}
