@@ -16,6 +16,7 @@
             overflow: hidden;
         }
         
+        /* Sidebar layout matching your minimal design profile */
         .sidebar {
             width: 260px;
             background-color: #1e1f20;
@@ -35,6 +36,7 @@
             border-right: none;
         }
 
+        /* Branding header typography styles */
         .brand {
             font-size: 24px;
             font-weight: bold;
@@ -48,6 +50,7 @@
         }
         .brand-sparkle { color: #7baaf7; }
         
+        /* Centered button formatting specifications */
         .new-chat-btn {
             background-color: #2d2f31;
             border: none;
@@ -64,6 +67,7 @@
         }
         .new-chat-btn:hover { background-color: #3c4043; }
         
+        /* Recents subtitle section typography layout */
         .section-title {
             font-size: 16px;
             color: #e3e3e3;
@@ -118,6 +122,7 @@
         }
         .delete-btn:hover { color: #f28b82; }
 
+        /* Main Context Chat Workspace Pane */
         .main-chat {
             flex: 1;
             display: flex;
@@ -130,6 +135,7 @@
             position: relative;
         }
         
+        /* Fixed Toggle Handle button positioning alignment rules */
         .menu-toggle {
             background: none;
             border: none;
@@ -142,6 +148,9 @@
             z-index: 10;
             padding: 5px 10px;
             border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .menu-toggle:hover { background-color: #2d2f31; }
 
@@ -182,6 +191,7 @@
         .message-row:hover .edit-msg-btn { opacity: 1; }
         .user-row { text-align: right; }
 
+        /* Foot Bar Core Entry container layouts */
         .input-bar-container {
             width: 100%;
             max-width: 800px;
@@ -251,6 +261,7 @@
 </head>
 <body>
 
+    <!-- Sidebar Menu view box configuration -->
     <div class="sidebar" id="sidebar-menu">
         <div class="brand"><span class="brand-sparkle">✦</span> Next AI</div>
         <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
@@ -258,7 +269,9 @@
         <div class="history-container" id="history-list"></div>
     </div>
 
+    <!-- Main Workspace Application Window viewpane -->
     <div class="main-chat" id="main-chat-window">
+        <!-- Structural Navigation burger options toggle handle link anchor -->
         <button class="menu-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
 
         <div class="chat-box" id="chat-stream">
@@ -273,6 +286,7 @@
                 <label for="file-upload" class="icon-label" title="Upload image or document">📎</label>
                 <input type="file" id="file-upload" name="file" accept="image/*, .pdf, .txt, .csv, .docx" style="display: none;" onchange="showSelectedFile()">
                 
+                <!-- Voice Microphone Capture Button Element -->
                 <span id="voice-mic-btn" class="icon-label" onclick="triggerVoiceInput()" title="Speak your question">🎙️</span>
                 
                 <input type="text" id="user-prompt" placeholder="Enter a prompt here..." onkeypress="if(event.key === 'Enter') sendMessage()">
@@ -318,17 +332,16 @@
             document.getElementById('sidebar-menu').classList.toggle('hidden');
         }
 
-        // FIXED VOICE INPUT CAPTURE: Toggles mic interface configurations dynamically
         function triggerVoiceInput() {
             if (!voiceRecognizer) {
-                alert("Voice capture speech-to-text features are not supported on this browser browser engine version.");
+                alert("Voice capture features are not supported on this browser version.");
                 return;
             }
             if (isRecordingVoice) {
                 voiceRecognizer.stop();
                 stopVoiceRecognition();
             } else {
-                window.speechSynthesis.cancel(); // Stop AI speaking immediately if recording starts
+                window.speechSynthesis.cancel(); 
                 isRecordingVoice = true;
                 document.getElementById('voice-mic-btn').classList.add('recording-active');
                 voiceRecognizer.start();
@@ -340,12 +353,9 @@
             document.getElementById('voice-mic-btn').classList.remove('recording-active');
         }
 
-        // FIXED VOICE OUTPUT: Reads string layouts dynamically out loud to local speakers
         function speakTextAloud(textString) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Flush old active queues
-                
-                // Clear away raw markdown HTML structures before piping strings to speakers
+                window.speechSynthesis.cancel(); 
                 let cleanText = textString.replace(/<\/?[^>]+(>|$)/g, "").replace(/•/g, "").trim();
                 if(cleanText.length > 250) cleanText = cleanText.substring(0, 250) + "... Analysis complete.";
                 
@@ -358,9 +368,203 @@
 
         function formatAIResponse(text) {
             if (!text) return "";
-            let formatted = text.replace(/
-http://googleusercontent.com/immersive_entry_chip/0
+            
+            // Fixed Regex Typo here: safely processes tags out completely
+            let formatted = text.replace(/```(.*?)\n([\s\S]*?)```/g, function(match, lang, codeBody) {
+                return '<pre style="background-color: #1e1f20; padding: 16px; border-radius: 12px; border: 1px solid #2d2f31; overflow-x: auto; font-family: \'Courier New\', Courier, monospace; font-size: 14px; text-align: left; color: #e3e3e3; margin: 15px 0; white-space: pre; max-width: 100%;">' + codeBody.trim() + '</pre>';
+            });
+            
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/^\*\s(.*)$/gm, '• $1');
+            
+            let segments = formatted.split(/(<pre[\s\S]*?<\/pre>)/);
+            for (let i = 0; i < segments.length; i++) {
+                if (!segments[i].startsWith('<pre')) {
+                    segments[i] = segments[i].replace(/\n/g, '<br>');
+                }
+            }
+            return segments.join('');
+        }
 
-Go back to Render, hit **Manual Deploy** -> **Deploy latest commit**, and give it 2 minutes to compile. 
+        function showSelectedFile() {
+            const fileInput = document.getElementById('file-upload');
+            const previewName = document.getElementById('file-preview-name');
+            if (fileInput && fileInput.files.length > 0) {
+                previewName.innerText = "📄 Attached: " + fileInput.files[0].name;
+            } else if (previewName) {
+                previewName.innerText = "";
+            }
+        }
 
-Once it updates, the microphone button (**🎙️**) will sit safely inside your bottom bar, your search history will remain perfectly intact when closing or reopening the window, and hovering over a recent item will reveal the trash button (**🗑️**) to clear it out instantly! Let me know how the voice output sounds!
+        function editPrompt(buttonElement) {
+            document.getElementById('user-prompt').value = buttonElement.getAttribute('data-raw');
+            document.getElementById('user-prompt').focus();
+        }
+
+        function startNewChat() {
+            currentSessionId = "session_" + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('current_session_id', currentSessionId);
+            
+            document.getElementById('chat-stream').innerHTML = `
+                <div class="message-row">
+                    <div class="sender-name sender-next">Next AI</div>
+                    <div class="message-text">Hello! I am Next AI. Enter a prompt below to start a new history record thread.</div>
+                </div>
+            `;
+            document.getElementById('user-prompt').value = "";
+            if(document.getElementById('file-upload')) document.getElementById('file-upload').value = "";
+            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
+            renderSidebarDOM();
+        }
+
+        function loadSession(sid) {
+            currentSessionId = sid;
+            localStorage.setItem('current_session_id', currentSessionId);
+            const chatStream = document.getElementById('chat-stream');
+            chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text" style="color: #aaa;">Syncing session history threads safely...</div></div>`;
+            
+            fetch('/api/load_session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "session_id": sid })
+            })
+            .then(res => res.json())
+            .then(data => {
+                chatStream.innerHTML = "";
+                if(data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        if(msg.role === 'user') {
+                            let safeString = msg.text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            chatStream.innerHTML += `
+                                <div class="message-row user-row">
+                                    <div class="sender-name sender-you"><button class="edit-msg-btn" data-raw="${safeString}" onclick="editPrompt(this)">✏️ Edit</button>You</div>
+                                    <div class="message-text">${msg.text}</div>
+                                </div>`;
+                        } else {
+                            chatStream.innerHTML += `
+                                <div class="message-row">
+                                    <div class="sender-name sender-next">Next AI</div>
+                                    <div class="message-text">${formatAIResponse(msg.text)}</div>
+                                </div>`;
+                        }
+                    });
+                } else {
+                    chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Empty thread loaded. Type a prompt below!</div></div>`;
+                }
+                chatStream.scrollTop = chatStream.scrollHeight;
+            }).catch(() => {
+                chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Thread activated. Continue typing below!</div></div>`;
+            });
+        }
+
+        function deleteSessionItem(event, sid) {
+            event.stopPropagation(); 
+            activeSessionsMetadata = activeSessionsMetadata.filter(item => item.session_id !== sid);
+            localStorage.setItem('sessions_metadata', JSON.stringify(activeSessionsMetadata));
+            
+            if (currentSessionId === sid) {
+                startNewChat();
+            } else {
+                renderSidebarDOM();
+            }
+        }
+
+        function syncActiveSessionViewOnBoot() {
+            renderSidebarDOM();
+            if(activeSessionsMetadata.some(item => item.session_id === currentSessionId)) {
+                loadSession(currentSessionId);
+            }
+        }
+
+        function renderSidebarDOM() {
+            const historyList = document.getElementById('history-list');
+            if (!historyList) return;
+            historyList.innerHTML = "";
+            activeSessionsMetadata.forEach(item => {
+                historyList.innerHTML += `
+                    <div class="history-item-wrapper">
+                        <div class="history-item" onclick="loadSession('${item.session_id}')" title="${item.title}">
+                            💬 ${item.title}
+                        </div>
+                        <button class="delete-btn" onclick="deleteSessionItem(event, '${item.session_id}')" title="Delete conversation thread">🗑️</button>
+                    </div>
+                `;
+            });
+        }
+
+        function sendMessage() {
+            const textInput = document.getElementById('user-prompt');
+            const fileInput = document.getElementById('file-upload');
+            const chatStream = document.getElementById('chat-stream');
+            
+            const message = textInput.value.trim();
+            const hasFile = fileInput && fileInput.files.length > 0;
+            
+            if (!message && !hasFile) return;
+
+            let userDisplay = message;
+            if (hasFile) {
+                userDisplay = (message ? message + "<br>" : "") + `<small style="color:#8ab4f8; font-weight:bold;">📎 Attached: ${fileInput.files[0].name}</small>`;
+            }
+            
+            let safeString = message.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+            chatStream.innerHTML += `
+                <div class="message-row user-row">
+                    <div class="sender-name sender-you">
+                        <button class="edit-msg-btn" data-raw="${safeString}" onclick="editPrompt(this)">✏️ Edit</button> 
+                        You
+                    </div>
+                    <div class="message-text">${userDisplay}</div>
+                </div>
+            `;
+            chatStream.scrollTop = chatStream.scrollHeight;
+
+            if (!activeSessionsMetadata.some(item => item.session_id === currentSessionId)) {
+                let initialTitle = message ? (message.length <= 25 ? message : message.substring(0,22) + "...") : "File Analysis";
+                activeSessionsMetadata.push({ "session_id": currentSessionId, "title": initialTitle });
+                localStorage.setItem('sessions_metadata', JSON.stringify(activeSessionsMetadata));
+            }
+
+            const formData = new FormData();
+            formData.append("message", message);
+            formData.append("session_id", currentSessionId);
+            if (hasFile) {
+                formData.append("file", fileInput.files[0]);
+            }
+
+            textInput.value = "";
+            if(fileInput) fileInput.value = "";
+            if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
+
+            fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.response) {
+                    let formattedOutput = formatAIResponse(data.response);
+                    chatStream.innerHTML += `
+                        <div class="message-row">
+                            <div class="sender-name sender-next">Next AI</div>
+                            <div class="message-text">${formattedOutput}</div>
+                        </div>
+                    `;
+                    speakTextAloud(data.response); 
+                } else {
+                    chatStream.innerHTML += `
+                        <div class="message-row">
+                            <div class="sender-name" style="color: red;">Error</div>
+                            <div class="message-text">${data.error || 'Connection dropped.'}</div>
+                        </div>
+                    `;
+                }
+                chatStream.scrollTop = chatStream.scrollHeight;
+                renderSidebarDOM(); 
+            })
+            .catch(err => console.error(err));
+        }
+    </script>
+</body>
+</html>
