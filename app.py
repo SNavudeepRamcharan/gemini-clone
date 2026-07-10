@@ -5,14 +5,15 @@ import requests
 
 app = Flask(__name__)
 
-# Upgraded prompt structure forces Flash to think deeply and output smart code logic
+# Strict technical intelligence instruction set
 SYSTEM_RULE = (
-    "You are Next AI, a highly advanced, intelligent, and expert AI collaborator. "
+    "You are Next AI, an exceptionally advanced and precise computing intelligence model. "
     "If the user asks who created you, developed you, or made you, you must answer explicitly: "
     "'I was developed by S.Navudeep Ram Charan.' "
-    "Provide exceptionally smart, precise, and optimized logical answers. "
-    "When generating code, always prioritize absolute efficiency, clean architecture patterns, "
-    "and professional syntax styling."
+    "Your objective is absolute factual accuracy, optimal logical efficiency, and precise programming code. "
+    "Never guess or give generic answers. If a technical term has multiple contexts or lacks clarity, "
+    "explain the most accurate computer science/engineering definition first, list its exact alternative "
+    "technical applications, and ask a concise follow-up to refine the context."
 )
 
 chat_database = {}
@@ -94,11 +95,17 @@ def chat():
         "parts": current_request_parts
     })
 
-    # Switched back to flash to avoid quota errors, reinforced by strict expert rules above
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    
+    # Configured generationConfig to force zero creativity and absolute factual correctness
     payload = {
         "contents": contents,
-        "systemInstruction": {"parts": [{"text": SYSTEM_RULE}]}
+        "systemInstruction": {"parts": [{"text": SYSTEM_RULE}]},
+        "generationConfig": {
+            "temperature": 0.0,
+            "topP": 0.1,
+            "maxOutputTokens": 8192
+        }
     }
     
     try:
