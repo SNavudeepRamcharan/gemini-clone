@@ -81,11 +81,10 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 5px;
         }
         .history-container::-webkit-scrollbar { display: none; }
         
-        /* Fixed History Item with a structured Delete button wrapper alignment */
         .history-item-wrapper {
             display: flex;
             align-items: center;
@@ -191,7 +190,7 @@
         .message-row:hover .edit-msg-btn { opacity: 1; }
         .user-row { text-align: right; }
 
-        /* Foot Bar Core Entry container layouts */
+        /* Input Container Layout */
         .input-bar-container {
             width: 100%;
             max-width: 800px;
@@ -227,7 +226,6 @@
         }
         .icon-label:hover { color: #8ab4f8; }
         
-        /* Microphone recording pulsing indicators style block */
         .recording-active {
             color: #f28b82 !important;
             animation: pulse 1.2s infinite;
@@ -261,7 +259,6 @@
 </head>
 <body>
 
-    <!-- Sidebar Menu view box configuration -->
     <div class="sidebar" id="sidebar-menu">
         <div class="brand"><span class="brand-sparkle">✦</span> Next AI</div>
         <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
@@ -269,15 +266,13 @@
         <div class="history-container" id="history-list"></div>
     </div>
 
-    <!-- Main Workspace Application Window viewpane -->
     <div class="main-chat" id="main-chat-window">
-        <!-- Structural Navigation burger options toggle handle link anchor -->
         <button class="menu-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
 
         <div class="chat-box" id="chat-stream">
             <div class="message-row">
                 <div class="sender-name sender-next">Next AI</div>
-                <div class="message-text">Hello! I am Next AI. Enter a prompt below or click the mic to talk to me!</div>
+                <div class="message-text">Hello! I am Next AI. Enter a prompt below to start a new history record thread.</div>
             </div>
         </div>
 
@@ -286,24 +281,21 @@
                 <label for="file-upload" class="icon-label" title="Upload image or document">📎</label>
                 <input type="file" id="file-upload" name="file" accept="image/*, .pdf, .txt, .csv, .docx" style="display: none;" onchange="showSelectedFile()">
                 
-                <!-- Voice Microphone Capture Button Element -->
                 <span id="voice-mic-btn" class="icon-label" onclick="triggerVoiceInput()" title="Speak your question">🎙️</span>
                 
-                <input type="text" id="user-prompt" placeholder="Enter a prompt here..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                <input type="text" id="user-prompt" placeholder="Enter a prompt here..." onkeypress="if(event.key === 'Enter') sendMessage(false)">
                 
-                <button id="send-btn" onclick="sendMessage()">Send</button>
+                <button id="send-btn" onclick="sendMessage(false)">Send</button>
             </div>
             <div id="file-preview-name"></div>
         </div>
     </div>
 
     <script>
-        // Unique tracking configurations mapping structured object stores
         let currentSessionId = localStorage.getItem('current_session_id') || "session_" + Math.random().toString(36).substring(2, 9);
         let activeSessionsMetadata = JSON.parse(localStorage.getItem('sessions_metadata')) || [];
         localStorage.setItem('current_session_id', currentSessionId);
 
-        // Core Voice Engine Instantiations using experimental bindings wrappers
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let voiceRecognizer = null;
         let isRecordingVoice = false;
@@ -318,14 +310,13 @@
                 const textOutput = event.results[0][0].transcript;
                 document.getElementById('user-prompt').value = textOutput;
                 stopVoiceRecognition();
-                sendMessage(); // Fire automatically once captured
+                sendMessage(true); // Pass true because this came from a microphone session
             };
 
             voiceRecognizer.onerror = function() { stopVoiceRecognition(); };
             voiceRecognizer.onend = function() { stopVoiceRecognition(); };
         }
 
-        // Run sync tracking tasks immediately on layout mount instances
         syncActiveSessionViewOnBoot();
 
         function toggleSidebar() {
@@ -334,7 +325,7 @@
 
         function triggerVoiceInput() {
             if (!voiceRecognizer) {
-                alert("Voice capture features are not supported on this browser version.");
+                alert("Voice capture speech-to-text features are not supported on this browser version.");
                 return;
             }
             if (isRecordingVoice) {
@@ -356,8 +347,9 @@
         function speakTextAloud(textString) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); 
-                let cleanText = textString.replace(/<\/?[^>]+(>|$)/g, "").replace(/•/g, "").trim();
-                if(cleanText.length > 250) cleanText = cleanText.substring(0, 250) + "... Analysis complete.";
+                
+                let cleanText = textString.replace(/<\/?[^>]+(>|$)/g, "").replace(/•/g, "").replace(/\*/g, "").trim();
+                if(cleanText.length > 300) cleanText = cleanText.substring(0, 300) + "... Analysis complete.";
                 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'en-US';
@@ -369,14 +361,19 @@
         function formatAIResponse(text) {
             if (!text) return "";
             
-            // Fixed Regex Typo here: safely processes tags out completely
-            let formatted = text.replace(/```(.*?)\n([\s\S]*?)```/g, function(match, lang, codeBody) {
+            // Format Markdown Code Blocks
+            let formatted = text.replace(/```(?:[a-zA-Z0-9_-]+)?([\s\S]*?)```/g, function(match, codeBody) {
                 return '<pre style="background-color: #1e1f20; padding: 16px; border-radius: 12px; border: 1px solid #2d2f31; overflow-x: auto; font-family: \'Courier New\', Courier, monospace; font-size: 14px; text-align: left; color: #e3e3e3; margin: 15px 0; white-space: pre; max-width: 100%;">' + codeBody.trim() + '</pre>';
             });
             
+            // Format Bolding (**text**)
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/^\*\s(.*)$/gm, '• $1');
             
+            // Format Bullet Points (handles both '* item' and nested list elements cleanly)
+            formatted = formatted.replace(/^\*\s(.*)$/gm, '• $1');
+            formatted = formatted.replace(/<br>\s*\*\s(.*)$/gm, '<br>• $1');
+            
+            // Format Line Breaks safely outside code segments
             let segments = formatted.split(/(<pre[\s\S]*?<\/pre>)/);
             for (let i = 0; i < segments.length; i++) {
                 if (!segments[i].startsWith('<pre')) {
@@ -404,6 +401,7 @@
         function startNewChat() {
             currentSessionId = "session_" + Math.random().toString(36).substring(2, 9);
             localStorage.setItem('current_session_id', currentSessionId);
+            window.speechSynthesis.cancel();
             
             document.getElementById('chat-stream').innerHTML = `
                 <div class="message-row">
@@ -420,6 +418,8 @@
         function loadSession(sid) {
             currentSessionId = sid;
             localStorage.setItem('current_session_id', currentSessionId);
+            window.speechSynthesis.cancel();
+            
             const chatStream = document.getElementById('chat-stream');
             chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text" style="color: #aaa;">Syncing session history threads safely...</div></div>`;
             
@@ -449,7 +449,7 @@
                         }
                     });
                 } else {
-                    chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Empty thread loaded. Type a prompt below!</div></div>`;
+                    chatStream.innerHTML = `<div class="message-row"><div class="sender-name sender-next">Next AI</div><div class="message-text">Empty thread loaded. Type a message below!</div></div>`;
                 }
                 chatStream.scrollTop = chatStream.scrollHeight;
             }).catch(() => {
@@ -459,6 +459,8 @@
 
         function deleteSessionItem(event, sid) {
             event.stopPropagation(); 
+            window.speechSynthesis.cancel();
+            
             activeSessionsMetadata = activeSessionsMetadata.filter(item => item.session_id !== sid);
             localStorage.setItem('sessions_metadata', JSON.stringify(activeSessionsMetadata));
             
@@ -492,7 +494,7 @@
             });
         }
 
-        function sendMessage() {
+        function sendMessage(isVoiceTriggered) {
             const textInput = document.getElementById('user-prompt');
             const fileInput = document.getElementById('file-upload');
             const chatStream = document.getElementById('chat-stream');
@@ -501,6 +503,7 @@
             const hasFile = fileInput && fileInput.files.length > 0;
             
             if (!message && !hasFile) return;
+            window.speechSynthesis.cancel();
 
             let userDisplay = message;
             if (hasFile) {
@@ -551,7 +554,10 @@
                             <div class="message-text">${formattedOutput}</div>
                         </div>
                     `;
-                    speakTextAloud(data.response); 
+                    // ONLY TALK IF MIC WAS USED TO START THIS CONVERSATION TURN
+                    if (isVoiceTriggered) {
+                        speakTextAloud(data.response); 
+                    }
                 } else {
                     chatStream.innerHTML += `
                         <div class="message-row">
