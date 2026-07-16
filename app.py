@@ -5,18 +5,15 @@ import requests
 
 app = Flask(__name__)
 
-# Strict technical intelligence instruction set
+# System rule modified to ensure the model responds efficiently to large matrices
 SYSTEM_RULE = (
-    "You are Next AI Pro, an exceptionally advanced computing intelligence model. "
-    "If the user asks who created you, developed you, or made you, you must answer explicitly: "
-    "'I was developed by S.Navudeep Ram Charan.' "
-    "Your core objective is maximum factual accuracy, deep logical efficiency, and pristine code generation. "
-    "When explaining technical or mathematical patterns, always analyze structural context step-by-step. "
-    "When generating code, always prioritize efficient computational complexity, optimal memory management, "
-    "and professional document syntax."
+    "You are Next AI, an advanced language model developed by S.Navudeep Ram Charan. "
+    "When a user asks to solve an exceptionally large matrix (like a 10x10 matrix), "
+    "do not write out all 100 rows for every single step all at once, as it will cause a timeout. "
+    "Instead, explain the initial row operations clearly, show the first few pivotal reductions, "
+    "and state the final Reduced Row Echelon Form (RREF) matrix cleanly so the connection stays stable."
 )
 
-# Global in-memory chat session log tracking structure
 chat_database = {}
 
 @app.route('/')
@@ -27,7 +24,6 @@ def home():
 def get_specific_history():
     data = request.json or {}
     device_sessions = data.get("session_ids", [])
-    
     summary = []
     for sid in device_sessions:
         if sid in chat_database:
@@ -44,97 +40,81 @@ def load_session_history():
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    user_message = request.form.get("message", "").strip()
+    user_message = request.form.get("message", "")
     session_id = request.form.get("session_id", "default")
     uploaded_file = request.files.get("file")
     
     api_key = os.environ.get("GEMINI_API_KEY")
     
     if not api_key:
-        return jsonify({"error": "GEMINI_API_KEY environment variable is missing on your hosting dashboard."}), 500
+        return jsonify({"error": "GEMINI_API_KEY environment variable is not set on Render."}), 500
     if not user_message and not uploaded_file:
-        return jsonify({"error": "No prompt payload or multi-modal file asset received."}), 400
+        return jsonify({"error": "No prompt or file received."}), 400
 
-    # Initialize session state tracking block if completely new
     if session_id not in chat_database:
-        title_source = user_message if user_message else (uploaded_file.filename if uploaded_file else "Asset Analysis")
-        title = title_source if len(title_source) <= 25 else title_source[:22] + "..."
-        chat_database[session_id] = {
-            "title": title,
-            "messages": []
-        }
+        title_source = user_message if user_message else (uploaded_file.filename if uploaded_file else "Matrix Analysis")
+        title = title_source if len(title_source) <= 30 else title_source[:27] + "..."
+        chat_database[session_id] = {"title": title, "messages": []}
 
-    # Build history array formatted cleanly as alternating 'user' and 'model' turns
-    contents = []
-    for msg in chat_database[session_id]["messages"]:
-        contents.append({
-            "role": "user" if msg["role"] == "user" else "model",
-            "parts": [{"text": msg["text"]}]
-        })
+    current_request_parts = []
 
-    # Prepare the current turn payload parts array
-    current_turn_parts = []
-
-    # Handle image or document file upload buffers safely
     if uploaded_file and uploaded_file.filename != '':
         try:
             file_bytes = uploaded_file.read()
             base64_data = base64.b64encode(file_bytes).decode('utf-8')
             mime_type = uploaded_file.content_type
             
-            current_turn_parts.append({
+            current_request_parts.append({
                 "inlineData": {
                     "mimeType": mime_type,
                     "data": base64_data
                 }
             })
         except Exception as file_err:
-            return jsonify({"error": f"Failed to parse file structural data buffer: {str(file_err)}"}), 400
+            return jsonify({"error": f"Failed to parse image file data: {str(file_err)}"}), 400
 
-    # Append text prompt if present
     if user_message:
-        current_turn_parts.append({"text": user_message})
+        current_request_parts.append({"text": user_message})
+        chat_database[session_id]["messages"].append({"role": "user", "text": user_message})
+    else:
+        # If the user only sent an image without text, append a placeholder prompt
+        current_request_parts.append({"text": "Analyze this problem image and solve it efficiently."})
+        chat_database[session_id]["messages"].append({"role": "user", "text": "📂 Sent an image for analysis"})
 
-    # Append the completed current user turn to the global contents array
+    contents = []
+    for msg in chat_database[session_id]["messages"][:-1]:
+        contents.append({
+            "role": "user" if msg["role"] == "user" else "model",
+            "parts": [{"text": msg["text"]}]
+        })
+        
     contents.append({
         "role": "user",
-        "parts": current_turn_parts
+        "parts": current_request_parts
     })
 
-    # Save user turn into session log memory (storing only text to prevent memory bloating)
-    chat_database[session_id]["messages"].append({
-        "role": "user",
-        "text": user_message if user_message else f"[Analyzed file: {uploaded_file.filename}]"
-    })
-
-    # Send unified payload configuration directly to the Gemini API engine endpoint
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     payload = {
         "contents": contents,
-        "systemInstruction": {"parts": [{"text": SYSTEM_RULE}]},
-        "generationConfig": {
-            "temperature": 0.0,   # Set creativity to zero for absolute factual reasoning
-            "topP": 0.1,
-            "maxOutputTokens": 8192
-        }
+        "systemInstruction": {"parts": [{"text": SYSTEM_RULE}]}
     }
     
     try:
-        response = requests.post(url, json=payload)
+        # Added a 25-second timeout constraint to prevent Render from abruptly cutting the stream
+        response = requests.post(url, json=payload, timeout=25)
         response_data = response.json()
         
         if 'candidates' not in response_data:
-            # Handle potential quota drops or syntax rejections cleanly
-            return jsonify({"error": f"API Validation Halt: {response_data.get('error', {}).get('message', response_data)}"}), 400
+            return jsonify({"error": "The AI engine is busy or throttled. Please try again in a moment."}), 400
             
         ai_response = response_data['candidates'][0]['content']['parts'][0]['text']
-        
-        # Save model response into session log memory
         chat_database[session_id]["messages"].append({"role": "model", "text": ai_response})
         return jsonify({"response": ai_response})
 
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "The matrix calculation is too heavy and timed out. Try asking to break it down step-by-step!"}), 504
     except Exception as e:
-        return jsonify({"error": f"Internal connection failure during engine processing: {str(e)}"}), 500
+        return jsonify({"error": f"Server processing bottleneck: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
