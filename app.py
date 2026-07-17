@@ -5,13 +5,16 @@ import requests
 
 app = Flask(__name__)
 
+# System rule tightly optimized to keep generation fast and avoid server timeout crashes
 SYSTEM_RULE = (
     "You are Next AI, an advanced language model developed by S.Navudeep Ram Charan. "
     "You remember images and files shared previously in the same conversation chat thread. "
-    "When a user asks to solve a matrix problem, provide a clear, efficient explanation and final answer."
+    "CRITICAL: When a user uploads a large matrix (like a 10x10 matrix), do NOT print out the intermediate "
+    "matrices for every single row reduction step, as it will hit a timeout error. "
+    "Instead, provide a highly concise answer: state the key row operation strategy briefly, "
+    "and provide the final Reduced Row Echelon Form (RREF) and the inverse matrix right away."
 )
 
-# Active session data dictionary store supporting image/file caching blocks
 chat_database = {}
 
 @app.route('/')
@@ -48,24 +51,21 @@ def chat():
     if not user_message and not uploaded_file:
         return jsonify({"error": "No prompt or file received"}), 400
 
-    # Initialize chat history thread metadata array stores if missing
     if session_id not in chat_database:
-        title_source = user_message if user_message else (uploaded_file.filename if uploaded_file else "File Analysis")
+        title_source = user_message if user_message else (uploaded_file.filename if uploaded_file else "Matrix Analysis")
         title = title_source if len(title_source) <= 30 else title_source[:27] + "..."
         chat_database[session_id] = {
             "title": title,
             "messages": [],
-            "cached_files": []  # NEW: Tracks persistent image memory bounds for this session
+            "cached_files": []
         }
 
-    # 1. Process and permanently cache file inputs inside the active database thread structure
     if uploaded_file and uploaded_file.filename != '':
         try:
             file_bytes = uploaded_file.read()
             base64_data = base64.b64encode(file_bytes).decode('utf-8')
             mime_type = uploaded_file.content_type
             
-            # Save file structural parts directly into session data cache bounds
             chat_database[session_id]["cached_files"].append({
                 "inlineData": {
                     "mimeType": mime_type,
@@ -75,30 +75,22 @@ def chat():
         except Exception as file_err:
             return jsonify({"error": f"Failed to process file component: {str(file_err)}"}), 400
 
-    # 2. Append current user message string trace inside logs database mapping references
     if user_message:
         chat_database[session_id]["messages"].append({"role": "user", "text": user_message})
     else:
         chat_database[session_id]["messages"].append({"role": "user", "text": "📂 Sent an image file attachment"})
 
-    # 3. Compile full historical structural records array payload block
     contents = []
-    
-    # Bundle previous historical conversation blocks safely
     for msg in chat_database[session_id]["messages"][:-1]:
         contents.append({
             "role": "user" if msg["role"] == "user" else "model",
             "parts": [{"text": msg["text"]}]
         })
         
-    # 4. Construct current prompt containing text trace + ALL historical file data vectors from this session
     current_request_parts = []
-    
-    # Inject cached files if they exist so Next AI maintains visual continuity
     if chat_database[session_id]["cached_files"]:
         current_request_parts.extend(chat_database[session_id]["cached_files"])
         
-    # Inject current text prompt string parameters
     current_request_parts.append({"text": user_message if user_message else "Analyze the attached context."})
     
     contents.append({
@@ -113,16 +105,19 @@ def chat():
     }
     
     try:
-        response = requests.post(url, json=payload, timeout=25)
+        # Extended timeout close to Render's absolute max limit to prevent early connection dropping
+        response = requests.post(url, json=payload, timeout=29)
         response_data = response.json()
         
         if 'candidates' not in response_data:
-            return jsonify({"error": "AI processing timeout or structural delivery breakdown. Try resending."}), 400
+            return jsonify({"error": "The problem processing limit was reached. Please try splitting the request details."}), 400
             
         ai_response = response_data['candidates'][0]['content']['parts'][0]['text']
         chat_database[session_id]["messages"].append({"role": "model", "text": ai_response})
         return jsonify({"response": ai_response})
 
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "The calculation is extremely heavy and timed out. Try asking me for the final answer directly without showing steps!"}), 504
     except Exception as e:
         return jsonify({"error": f"Transmission breakdown: {str(e)}"}), 500
 
