@@ -249,22 +249,23 @@
             font-weight: 500;
         }
 
-        /* Standard responsive matrix rendering format rules */
         .matrix-table {
-            margin: 10px 0;
-            border-left: 2px solid #e3e3e3;
-            border-right: 2px solid #e3e3e3;
-            border-radius: 6px;
+            margin: 12px 0;
+            border-left: 2px solid #8ab4f8;
+            border-right: 2px solid #8ab4f8;
+            border-radius: 5px;
             padding: 0 6px;
             display: inline-table;
             vertical-align: middle;
             border-collapse: collapse;
+            background-color: #1e1f20;
         }
         .matrix-table td {
-            padding: 6px 10px;
+            padding: 6px 12px;
             text-align: center;
-            font-family: monospace;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
+            color: #fff;
         }
     </style>
 </head>
@@ -294,7 +295,7 @@
                 
                 <span id="voice-mic-btn" class="icon-label" onclick="triggerVoiceInput()" title="Speak your question">🎙️</span>
                 
-                <input type="text" id="user-prompt" placeholder="Enter a prompt here..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                <input type="text" id="user-prompt" placeholder="Type an expert prompt or ask me to solve structures..." onkeypress="if(event.key === 'Enter') sendMessage()">
                 
                 <button id="send-btn" onclick="sendMessage()">Send</button>
             </div>
@@ -310,7 +311,7 @@
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let voiceRecognizer = null;
         let isRecordingVoice = false;
-        let voicePermissionGranted = false; // Tracks authorization rules explicitly
+        let voicePermissionGranted = false; 
 
         if (SpeechRecognition) {
             voiceRecognizer = new SpeechRecognition();
@@ -322,7 +323,7 @@
                 const textOutput = event.results[0][0].transcript;
                 document.getElementById('user-prompt').value = textOutput;
                 stopVoiceRecognition();
-                voicePermissionGranted = true; // Give speech approval explicitly on active mic triggers
+                voicePermissionGranted = true; 
                 sendMessage(); 
             };
 
@@ -338,7 +339,7 @@
 
         function triggerVoiceInput() {
             if (!voiceRecognizer) {
-                alert("Voice capture features are not supported on this browser version.");
+                alert("Voice features are not supported on this browser context.");
                 return;
             }
             if (isRecordingVoice) {
@@ -357,35 +358,35 @@
         }
 
         function speakTextAloud(textString) {
-            // SILENCED AUTOMATIC SPEAKING RULE: Text-to-speech engine executes ONLY if user triggered it via voice input
             if (voicePermissionGranted && 'speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); 
                 let cleanText = textString.replace(/<\/?[^>]+(>|$)/g, "").replace(/•/g, "").trim();
-                if(cleanText.length > 150) cleanText = cleanText.substring(0, 150) + "... Response complete.";
+                if(cleanText.length > 150) cleanText = cleanText.substring(0, 150) + "... Analysis complete.";
                 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'en-US';
                 window.speechSynthesis.speak(utterance);
-                voicePermissionGranted = false; // Reset permission loop after reading once
+                voicePermissionGranted = false; 
             }
         }
 
-        // Clean matrix grid renderer to clean LaTeX structures out of text strings
         function formatAIResponse(text) {
             if (!text) return "";
-            
             let formatted = text;
 
-            // Render raw matrix blocks (\begin{pmatrix} ... \end{pmatrix}) into dynamic display tables
-            formatted = formatted.replace(/\\begin\{pmatrix\}([\s\S]*?)\\end\{pmatrix\}/g, function(match, matrixBody) {
+            // Robust multi-format matrix block scanner targeting standard matrix outputs
+            const matrixRegex = /\\begin\{(pmatrix|matrix|bmatrix|array)\}([\s\S]*?)\\end\{\1\}/g;
+            formatted = formatted.replace(matrixRegex, function(match, type, matrixBody) {
                 let rows = matrixBody.trim().split(/\\\\/);
                 let htmlTable = '<table class="matrix-table">';
                 rows.forEach(row => {
-                    if(row.trim()) {
+                    let cleanedRow = row.replace(/^[^{]*\{[^{}]*\}/g, '').trim(); 
+                    if(cleanedRow) {
                         htmlTable += '<tr>';
-                        let columns = row.split('&');
+                        let columns = cleanedRow.split('&');
                         columns.forEach(col => {
-                            htmlTable += '<td>' + col.trim() + '</td>';
+                            let val = col.trim();
+                            if(val) htmlTable += '<td>' + val + '</td>';
                         });
                         htmlTable += '</tr>';
                     }
@@ -394,10 +395,7 @@
                 return htmlTable;
             });
 
-            // Strip mathematical environment markers ($$, $) safely
             formatted = formatted.replace(/\$\$/g, '').replace(/\$/g, '');
-
-            // Code Blocks formatting rule
             formatted = formatted.replace(/```(.*?)\n([\s\S]*?)```/g, function(match, lang, codeBody) {
                 return '<pre style="background-color: #1e1f20; padding: 16px; border-radius: 12px; border: 1px solid #2d2f31; overflow-x: auto; font-family: monospace; font-size: 14px; text-align: left; color: #e3e3e3; margin: 15px 0; white-space: pre; max-width: 100%;">' + codeBody.trim() + '</pre>';
             });
@@ -513,7 +511,7 @@
                         <div class="history-item" onclick="loadSession('${item.session_id}')" title="${item.title}">
                             💬 ${item.title}
                         </div>
-                        <button class="delete-btn" onclick="deleteSessionItem(event, '${item.session_id}')" title="Delete conversation thread">🗑️</button>
+                        <button class="delete-btn" onclick="deleteSessionItem(event, '${item.session_id}')" title="Delete thread">🗑️</button>
                     </div>
                 `;
             });
@@ -545,6 +543,14 @@
                     <div class="message-text">${userDisplay}</div>
                 </div>
             `;
+            
+            const aiMessageRowId = "ai_" + Math.random().toString(36).substring(2, 9);
+            chatStream.innerHTML += `
+                <div class="message-row">
+                    <div class="sender-name sender-next">Next AI</div>
+                    <div class="message-text" id="${aiMessageRowId}">...</div>
+                </div>
+            `;
             chatStream.scrollTop = chatStream.scrollHeight;
 
             if (!activeSessionsMetadata.some(item => item.session_id === currentSessionId)) {
@@ -564,33 +570,36 @@
             if(fileInput) fileInput.value = "";
             if(document.getElementById('file-preview-name')) document.getElementById('file-preview-name').innerText = "";
 
+            const aiResponseContainer = document.getElementById(aiMessageRowId);
+            let fullAccumulatedText = "";
+
             fetch('/api/chat', {
                 method: 'POST',
                 body: formData
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.response) {
-                    let formattedOutput = formatAIResponse(data.response);
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name sender-next">Next AI</div>
-                            <div class="message-text">${formattedOutput}</div>
-                        </div>
-                    `;
-                    speakTextAloud(data.response); 
-                } else {
-                    chatStream.innerHTML += `
-                        <div class="message-row">
-                            <div class="sender-name" style="color: red;">Error</div>
-                            <div class="message-text">${data.error || 'Connection dropped.'}</div>
-                        </div>
-                    `;
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                function readStreamChunk() {
+                    return reader.read().then(({ done, value }) => {
+                        if (done) {
+                            renderSidebarDOM();
+                            speakTextAloud(fullAccumulatedText); 
+                            return;
+                        }
+                        const chunkStr = decoder.decode(value, { stream: true });
+                        fullAccumulatedText += chunkStr;
+                        aiResponseContainer.innerHTML = formatAIResponse(fullAccumulatedText);
+                        chatStream.scrollTop = chatStream.scrollHeight;
+                        return readStreamChunk();
+                    });
                 }
-                chatStream.scrollTop = chatStream.scrollHeight;
-                renderSidebarDOM(); 
+                return readStreamChunk();
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                aiResponseContainer.innerHTML = `<span style="color:red;">Stream processing error: ${err}</span>`;
+            });
         }
     </script>
 </body>
