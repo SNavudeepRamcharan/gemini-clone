@@ -16,7 +16,6 @@
             overflow: hidden;
         }
         
-        /* Sidebar layout matching your minimal design profile */
         .sidebar {
             width: 260px;
             background-color: #1e1f20;
@@ -36,7 +35,6 @@
             border-right: none;
         }
 
-        /* Branding header typography styles */
         .brand {
             font-size: 24px;
             font-weight: bold;
@@ -50,7 +48,6 @@
         }
         .brand-sparkle { color: #7baaf7; }
         
-        /* Centered button formatting specifications */
         .new-chat-btn {
             background-color: #2d2f31;
             border: none;
@@ -67,7 +64,6 @@
         }
         .new-chat-btn:hover { background-color: #3c4043; }
         
-        /* Recents subtitle section typography layout */
         .section-title {
             font-size: 16px;
             color: #e3e3e3;
@@ -85,7 +81,6 @@
         }
         .history-container::-webkit-scrollbar { display: none; }
         
-        /* Fixed History Item wrapper supporting structured delete icon display */
         .history-item-wrapper {
             display: flex;
             align-items: center;
@@ -108,7 +103,6 @@
         }
         .history-item:hover { color: #fff; }
         
-        /* Trash button styling - hidden by default, visible on wrapper hover */
         .delete-btn {
             background: none;
             border: none;
@@ -123,7 +117,6 @@
         }
         .delete-btn:hover { color: #f28b82; }
 
-        /* Main Workspace Window Layout */
         .main-chat {
             flex: 1;
             display: flex;
@@ -148,6 +141,9 @@
             z-index: 10;
             padding: 5px 10px;
             border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .menu-toggle:hover { background-color: #2d2f31; }
 
@@ -188,7 +184,6 @@
         .message-row:hover .edit-msg-btn { opacity: 1; }
         .user-row { text-align: right; }
 
-        /* Input Bar Layout */
         .input-bar-container {
             width: 100%;
             max-width: 800px;
@@ -253,6 +248,24 @@
             padding-left: 40px;
             font-weight: 500;
         }
+
+        /* Standard responsive matrix rendering format rules */
+        .matrix-table {
+            margin: 10px 0;
+            border-left: 2px solid #e3e3e3;
+            border-right: 2px solid #e3e3e3;
+            border-radius: 6px;
+            padding: 0 6px;
+            display: inline-table;
+            vertical-align: middle;
+            border-collapse: collapse;
+        }
+        .matrix-table td {
+            padding: 6px 10px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -297,6 +310,7 @@
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let voiceRecognizer = null;
         let isRecordingVoice = false;
+        let voicePermissionGranted = false; // Tracks authorization rules explicitly
 
         if (SpeechRecognition) {
             voiceRecognizer = new SpeechRecognition();
@@ -308,6 +322,7 @@
                 const textOutput = event.results[0][0].transcript;
                 document.getElementById('user-prompt').value = textOutput;
                 stopVoiceRecognition();
+                voicePermissionGranted = true; // Give speech approval explicitly on active mic triggers
                 sendMessage(); 
             };
 
@@ -330,7 +345,6 @@
                 voiceRecognizer.stop();
                 stopVoiceRecognition();
             } else {
-                window.speechSynthesis.cancel(); 
                 isRecordingVoice = true;
                 document.getElementById('voice-mic-btn').classList.add('recording-active');
                 voiceRecognizer.start();
@@ -343,22 +357,49 @@
         }
 
         function speakTextAloud(textString) {
-            if ('speechSynthesis' in window) {
+            // SILENCED AUTOMATIC SPEAKING RULE: Text-to-speech engine executes ONLY if user triggered it via voice input
+            if (voicePermissionGranted && 'speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); 
                 let cleanText = textString.replace(/<\/?[^>]+(>|$)/g, "").replace(/•/g, "").trim();
-                if(cleanText.length > 250) cleanText = cleanText.substring(0, 250) + "... Analysis complete.";
+                if(cleanText.length > 150) cleanText = cleanText.substring(0, 150) + "... Response complete.";
                 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'en-US';
-                utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
+                voicePermissionGranted = false; // Reset permission loop after reading once
             }
         }
 
+        // Clean matrix grid renderer to clean LaTeX structures out of text strings
         function formatAIResponse(text) {
             if (!text) return "";
-            let formatted = text.replace(/```(.*?)\n([\s\S]*?)```/g, function(match, lang, codeBody) {
-                return '<pre style="background-color: #1e1f20; padding: 16px; border-radius: 12px; border: 1px solid #2d2f31; overflow-x: auto; font-family: \'Courier New\', Courier, monospace; font-size: 14px; text-align: left; color: #e3e3e3; margin: 15px 0; white-space: pre; max-width: 100%;">' + codeBody.trim() + '</pre>';
+            
+            let formatted = text;
+
+            // Render raw matrix blocks (\begin{pmatrix} ... \end{pmatrix}) into dynamic display tables
+            formatted = formatted.replace(/\\begin\{pmatrix\}([\s\S]*?)\\end\{pmatrix\}/g, function(match, matrixBody) {
+                let rows = matrixBody.trim().split(/\\\\/);
+                let htmlTable = '<table class="matrix-table">';
+                rows.forEach(row => {
+                    if(row.trim()) {
+                        htmlTable += '<tr>';
+                        let columns = row.split('&');
+                        columns.forEach(col => {
+                            htmlTable += '<td>' + col.trim() + '</td>';
+                        });
+                        htmlTable += '</tr>';
+                    }
+                });
+                htmlTable += '</table>';
+                return htmlTable;
+            });
+
+            // Strip mathematical environment markers ($$, $) safely
+            formatted = formatted.replace(/\$\$/g, '').replace(/\$/g, '');
+
+            // Code Blocks formatting rule
+            formatted = formatted.replace(/```(.*?)\n([\s\S]*?)```/g, function(match, lang, codeBody) {
+                return '<pre style="background-color: #1e1f20; padding: 16px; border-radius: 12px; border: 1px solid #2d2f31; overflow-x: auto; font-family: monospace; font-size: 14px; text-align: left; color: #e3e3e3; margin: 15px 0; white-space: pre; max-width: 100%;">' + codeBody.trim() + '</pre>';
             });
             
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -444,15 +485,10 @@
             });
         }
 
-        // DELETION FUNCTION: Triggers when the trash icon is clicked
         function deleteSessionItem(event, sid) {
-            event.stopPropagation(); // Prevents clicking the row from opening the chat thread
-            
-            // Remove the targeted ID from browser storage memory
+            event.stopPropagation(); 
             activeSessionsMetadata = activeSessionsMetadata.filter(item => item.session_id !== sid);
             localStorage.setItem('sessions_metadata', JSON.stringify(activeSessionsMetadata));
-            
-            // Reset the layout if the active chat window gets deleted
             if (currentSessionId === sid) {
                 startNewChat();
             } else {
@@ -467,7 +503,6 @@
             }
         }
 
-        // Renders the recent items with an explicit, distinct delete icon per row
         function renderSidebarDOM() {
             const historyList = document.getElementById('history-list');
             if (!historyList) return;
